@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, LogBox } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, LogBox } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
@@ -17,6 +18,7 @@ import { Home, Calendar, User, ShieldCheck } from 'lucide-react-native';
 
 const MainApp = () => {
   const { user, loading } = useAuth();
+  const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState('home'); // 'home' | 'history' | 'profile'
   const [activeModal, setActiveModal] = useState(null); // null | 'check-in' | 'scan-student' | 'student-history' | 'leave'
 
@@ -92,19 +94,31 @@ const MainApp = () => {
       case 'profile':
         return <ProfileScreen onBack={() => setCurrentTab('home')} />;
       default:
-        return <HomeScreen onNavigate={(screen) => setActiveModal(screen)} />;
+        return (
+          <HomeScreen
+            onNavigate={(screen) => {
+              if (screen === 'history-tab') {
+                setCurrentTab('history');
+              } else if (screen === 'profile-tab') {
+                setCurrentTab('profile');
+              } else {
+                setActiveModal(screen);
+              }
+            }}
+          />
+        );
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
       <View style={styles.screenContainer}>
         {renderScreen()}
       </View>
 
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: Math.max(insets.bottom, 10) }]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => setCurrentTab('home')}
@@ -138,15 +152,17 @@ const MainApp = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default function App() {
   return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 

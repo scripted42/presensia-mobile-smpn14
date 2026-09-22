@@ -1,622 +1,198 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   RefreshControl,
-  SafeAreaView,
-  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import {
-  UserCheck,
-  QrCode,
-  LogOut,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  ChevronRight,
-  Users,
-  FileText,
-} from 'lucide-react-native';
+
+// Reusable Modular Home Components
+import HomeHeader from '../components/home/HomeHeader';
+import HighlightCard from '../components/home/HighlightCard';
+import StatCardsSection from '../components/home/StatCardsSection';
+import QuickMenuGrid from '../components/home/QuickMenuGrid';
+import ActivitySection from '../components/home/ActivitySection';
+import StudentQrModal from '../components/home/StudentQrModal';
 
 const HomeScreen = ({ onNavigate }) => {
-  const { user, logout, isStudent, isTeacher } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { user, logout, isStudent } = useAuth();
+
+  // Data states
   const [todayAttendance, setTodayAttendance] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [statistics, setStatistics] = useState(null);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [hasPendingNotification, setHasPendingNotification] = useState(false);
+
+  // Loading states
+  const [loadingToday, setLoadingToday] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchTodayStatus = useCallback(async () => {
-    try {
-      const response = await client.get('/attendance/today');
-      if (response.data?.success) {
-        setTodayAttendance(response.data.data?.attendance || null);
-      }
-    } catch (e) {
-      console.log('[HomeScreen] Gagal memuat status absensi:', e?.response?.status, e?.message);
-      if (e?.response?.status === 401) {
-        logout();
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  // Student QR Modal
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+
+  // Month Name
+  const currentMonthName = new Date().toLocaleDateString('id-ID', {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  // Fetch all home data concurrently
+  const fetchHomeData = useCallback(async () => {
+    // 1. Fetch Today Status
+    const pToday = client
+      .get('/attendance/today')
+      .then((res) => {
+        if (res.data?.success) {
+          setTodayAttendance(res.data.data?.attendance || null);
+        }
+      })
+      .catch((e) => {
+        console.log('[HomeScreen] Gagal memuat status hari ini:', e?.message);
+        if (e?.response?.status === 401) {
+          logout();
+        }
+      })
+      .finally(() => setLoadingToday(false));
+
+    // 2. Fetch Monthly Summary & Activities
+    const now = new Date();
+    const pStats = client
+      .get('/reports/monthly', {
+        params: { month: now.getMonth() + 1, year: now.getFullYear() },
+      })
+      .then((res) => {
+        if (res.data?.success && res.data?.data) {
+          setStatistics(res.data.data.statistics || null);
+          setRecentActivities(res.data.data.attendances || []);
+        }
+      })
+      .catch((e) => {
+        console.log('[HomeScreen] Gagal memuat statistik bulanan:', e?.message);
+      })
+      .finally(() => setLoadingStats(false));
+
+    // 3. Check for pending notifications / leave approvals
+    const pLeaves = client
+      .get('/leave-requests')
+      .then((res) => {
+        if (res.data?.success && res.data?.data) {
+          const count = res.data.data.pending_approvals_count || 0;
+          setHasPendingNotification(count > 0);
+        }
+      })
+      .catch((e) => {
+        // Silently catch leave request errors
+      });
+
+    await Promise.allSettled([pToday, pStats, pLeaves]);
+    setRefreshing(false);
+  }, [logout]);
 
   useEffect(() => {
-    fetchTodayStatus();
-  }, [fetchTodayStatus]);
+    fetchHomeData();
+  }, [fetchHomeData]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchTodayStatus();
+    fetchHomeData();
   };
 
-  const getStatusBadge = () => {
-    if (!todayAttendance) {
-      return {
-        label: 'Belum Absen',
-        bg: '#FEF2F2',
-        color: '#DC2626',
-        icon: AlertTriangle,
-      };
+  const handleNotificationPress = () => {
+    if (hasPendingNotification) {
+      onNavigate('leave');
+    } else {
+      Alert.alert(
+        'Notifikasi',
+        'Tidak ada notifikasi baru saat ini. Seluruh status absensi dan permohonan telah diperbarui.'
+      );
     }
-
-    const st = todayAttendance.status?.toLowerCase();
-    if (st === 'ontime' || st === 'present' || st === 'tepat_waktu') {
-      return {
-        label: 'Tepat Waktu',
-        bg: '#ECFDF5',
-        color: '#059669',
-        icon: CheckCircle2,
-      };
-    } else if (st === 'late' || st === 'terlambat') {
-      return {
-        label: 'Terlambat',
-        bg: '#FEF3C7',
-        color: '#D97706',
-        icon: Clock,
-      };
-    } else if (st === 'permission' || st === 'leave' || st === 'izin') {
-      return {
-        label: 'Izin',
-        bg: '#EFF6FF',
-        color: '#2563EB',
-        icon: Calendar,
-      };
-    }
-    return {
-      label: todayAttendance.status || 'Hadir',
-      bg: '#F1F5F9',
-      color: '#475569',
-      icon: CheckCircle2,
-    };
   };
-
-  const badge = getStatusBadge();
-  const BadgeIcon = badge.icon;
-
-  const todayDateStr = new Date().toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.screenContainer}>
+      {/* 1. HEADER AREA */}
+      <HomeHeader
+        user={user}
+        isStudent={isStudent}
+        insets={insets}
+        onLogout={logout}
+        onNotificationPress={handleNotificationPress}
+        hasUnreadNotification={hasPendingNotification}
+      />
+
+      {/* Main Scrollable Content */}
       <ScrollView
-        contentContainerStyle={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2563EB']}
+            tintColor="#2563EB"
+          />
+        }
       >
-        {/* Top Bar / Header */}
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <Text style={styles.greeting}>Halo,</Text>
-            <Text style={styles.userName} numberOfLines={1}>{user?.name || 'Pengguna'}</Text>
-            <View style={styles.rolePill}>
-              <Text style={styles.roleText}>
-                {isStudent ? 'Siswa' : (user?.user_type === 'employee' ? 'Guru / Pegawai' : 'Staff')}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.7}>
-            <LogOut size={18} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
+        {/* 2. HIGHLIGHT CARD (Jam Digital & Status Absen & Tombol Utama) */}
+        <HighlightCard
+          todayAttendance={todayAttendance}
+          isStudent={isStudent}
+          loading={loadingToday}
+          onCheckInPress={() => onNavigate('check-in')}
+          onCheckOutPress={() => onNavigate('check-out')}
+          onStudentQrPress={() => setQrModalVisible(true)}
+        />
 
-        {/* Date Bar */}
-        <View style={styles.dateBar}>
-          <Calendar size={14} color="#64748B" style={{ marginRight: 6 }} />
-          <Text style={styles.dateText}>{todayDateStr}</Text>
-        </View>
+        {/* 3. MENU CEPAT SECTION (Grid 3 Kolom Role-Based) */}
+        <QuickMenuGrid
+          isStudent={isStudent}
+          onNavigate={(screen) => {
+            if (screen === 'student-qr-modal') {
+              setQrModalVisible(true);
+            } else {
+              onNavigate(screen);
+            }
+          }}
+        />
 
-        {/* Today's Status Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Status Kehadiran Hari Ini</Text>
-            <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-              <BadgeIcon size={12} color={badge.color} style={{ marginRight: 4 }} />
-              <Text style={[styles.statusBadgeText, { color: badge.color }]}>{badge.label}</Text>
-            </View>
-          </View>
+        {/* 4. STATISTIK SECTION (4 Stat Cards Bulanan + Skeleton) */}
+        <StatCardsSection
+          stats={statistics}
+          loading={loadingStats}
+          monthName={currentMonthName}
+        />
 
-          {loading ? (
-            <ActivityIndicator color="#2563EB" style={{ marginVertical: 20 }} />
-          ) : (
-            <View style={styles.attendanceRow}>
-              {/* Check-in info */}
-              <View style={styles.attendanceCol}>
-                <Text style={styles.colLabel}>Jam Masuk</Text>
-                <Text style={styles.colTime}>
-                  {todayAttendance?.check_in
-                    ? new Date(todayAttendance.check_in).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-                    : '-- : --'}
-                </Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Check-out info */}
-              <View style={styles.attendanceCol}>
-                <Text style={styles.colLabel}>Jam Pulang</Text>
-                <Text style={styles.colTime}>
-                  {todayAttendance?.check_out
-                    ? new Date(todayAttendance.check_out).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-                    : '-- : --'}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {todayAttendance?.location_name ? (
-            <View style={styles.locationContainer}>
-              <Text style={styles.locationText} numberOfLines={1}>
-                📍 {todayAttendance.location_name}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Aksi Presensi</Text>
-
-        <View style={styles.actionsContainer}>
-          {/* Guru / Pegawai Actions */}
-          {!isStudent && (
-            <>
-              {/* Row 1: Absen Masuk & Absen Pulang */}
-              <View style={styles.actionsGrid}>
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#2563EB' }]}
-                  onPress={() => onNavigate('check-in')}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.actionIconCircle}>
-                    <UserCheck size={22} color="#2563EB" />
-                  </View>
-                  <Text style={styles.actionBtnTitle}>Absen Masuk</Text>
-                  <Text style={styles.actionBtnSub}>
-                    {todayAttendance?.check_in ? '✓ Sudah Masuk' : 'Selfie, GPS & QR'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: '#D97706' }]}
-                  onPress={() => onNavigate('check-out')}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.actionIconCircle}>
-                    <LogOut size={22} color="#D97706" />
-                  </View>
-                  <Text style={styles.actionBtnTitle}>Absen Pulang</Text>
-                  <Text style={styles.actionBtnSub}>
-                    {todayAttendance?.check_out ? '✓ Sudah Pulang' : 'Selfie, GPS & QR'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Row 2: Scan QR Siswa */}
-              <TouchableOpacity
-                style={styles.scanStudentBtn}
-                onPress={() => onNavigate('scan-student')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.scanStudentLeft}>
-                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12 }]}>
-                    <QrCode size={22} color="#059669" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.scanStudentTitle}>Scan QR Presensi Siswa</Text>
-                    <Text style={styles.scanStudentSub}>Pemindaian batch siswa di kelas / gerbang</Text>
-                  </View>
-                </View>
-                <ChevronRight size={20} color="rgba(255,255,255,0.8)" />
-              </TouchableOpacity>
-
-              {/* Row 3: Riwayat Presensi Siswa */}
-              <TouchableOpacity
-                style={styles.studentHistoryBtn}
-                onPress={() => onNavigate('student-history')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.scanStudentLeft}>
-                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12, backgroundColor: '#EEF2FF' }]}>
-                    <Users size={22} color="#4F46E5" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.studentHistoryTitle}>Riwayat Presensi Siswa</Text>
-                    <Text style={styles.studentHistorySub}>Monitoring rekap harian, pencarian & filter kelas</Text>
-                  </View>
-                </View>
-                <ChevronRight size={20} color="#6366F1" />
-              </TouchableOpacity>
-
-              {/* Row 4: Permohonan Izin & Cuti */}
-              <TouchableOpacity
-                style={styles.leaveBtn}
-                onPress={() => onNavigate('leave')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.scanStudentLeft}>
-                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12, backgroundColor: '#FEF3C7' }]}>
-                    <FileText size={22} color="#D97706" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.leaveTitle}>Permohonan Izin & Cuti</Text>
-                    <Text style={styles.leaveSub}>Pengajuan sakit/cuti & verifikasi persetujuan</Text>
-                  </View>
-                </View>
-                <ChevronRight size={20} color="#D97706" />
-              </TouchableOpacity>
-            </>
-          )}
-
-          {/* Siswa Actions */}
-          {isStudent && (
-            <>
-              <View style={styles.studentCard}>
-                <QrCode size={36} color="#2563EB" style={{ marginBottom: 12 }} />
-                <Text style={styles.studentCardTitle}>QR Code Siswa</Text>
-                <Text style={styles.studentNisText}>NIS: {user?.nis || '-'}</Text>
-                <Text style={styles.studentCardDesc}>
-                  Tunjukkan QR Code ini kepada guru piket / wali kelas saat tiba di sekolah untuk absensi harian.
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.studentLeaveBtn}
-                onPress={() => onNavigate('leave')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.scanStudentLeft}>
-                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12, backgroundColor: '#FEF3C7' }]}>
-                    <FileText size={20} color="#D97706" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.leaveTitle}>Pengajuan Izin / Sakit</Text>
-                    <Text style={styles.leaveSub}>Ajukan izin tidak masuk & lampirkan surat dokter</Text>
-                  </View>
-                </View>
-                <ChevronRight size={20} color="#D97706" />
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+        {/* 5. RIWAYAT / AKTIVITAS SECTION (Daftar Aktivitas Terakhir + Lihat Semua) */}
+        <ActivitySection
+          activities={recentActivities}
+          loading={loadingStats}
+          onViewAllPress={() => onNavigate('history-tab')}
+        />
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Modal Kartu QR Siswa */}
+      <StudentQrModal
+        visible={qrModalVisible}
+        onClose={() => setQrModalVisible(false)}
+        user={user}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screenContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: 13,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.4,
-    marginTop: 1,
-  },
-  rolePill: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-  },
-  roleText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#2563EB',
-  },
-  logoutBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#FEF2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-  },
-  dateBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    marginBottom: 24,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  attendanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  attendanceCol: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  colLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  colTime: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  divider: {
-    width: 1,
-    height: 36,
-    backgroundColor: '#E2E8F0',
-  },
-  locationContainer: {
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  locationText: {
-    fontSize: 11,
-    color: '#64748B',
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#1E293B',
-    marginBottom: 12,
-  },
-  actionsContainer: {
-    gap: 12,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  scanStudentBtn: {
-    backgroundColor: '#059669',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  scanStudentLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  scanStudentTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  scanStudentSub: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 11,
-  },
-  studentHistoryBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1.5,
-    borderColor: '#E0E7FF',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  studentHistoryTitle: {
-    color: '#1E1B4B',
-    fontSize: 14,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  studentHistorySub: {
-    color: '#6366F1',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  leaveBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1.5,
-    borderColor: '#FEF3C7',
-    shadowColor: '#D97706',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  studentLeaveBtn: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1.5,
-    borderColor: '#FEF3C7',
-    shadowColor: '#D97706',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-    marginTop: 12,
-  },
-  leaveTitle: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  leaveSub: {
-    color: '#D97706',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  actionBtn: {
-    flex: 1,
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  actionIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  actionBtnTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  actionBtnSub: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 11,
-  },
-  studentCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  studentCardTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 2,
-  },
-  studentNisText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2563EB',
-    marginBottom: 10,
-  },
-  studentCardDesc: {
-    fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 18,
+  scrollContent: {
+    paddingBottom: 30,
   },
 });
 
