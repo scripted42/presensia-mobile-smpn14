@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, LogBox } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+
+// Sembunyikan pesan deprecation dan warning CLI dari layar HP
+LogBox.ignoreLogs([
+  'SafeAreaView has been deprecated',
+  'Cannot connect to Expo CLI',
+  '<CameraView> component does not support children',
+]);
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import CheckInScreen from './src/screens/CheckInScreen';

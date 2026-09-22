@@ -143,25 +143,25 @@ const StudentScanScreen = ({ onBack }) => {
       {/* Camera Scanner Viewport */}
       <View style={styles.cameraBox}>
         <CameraView
-          style={styles.camera}
+          style={StyleSheet.absoluteFill}
           facing="back"
           enableTorch={torch}
           barcodeScannerSettings={{
             barcodeTypes: ['qr'],
           }}
           onBarcodeScanned={handleBarcodeScanned}
-        >
-          {/* QR Viewfinder Target Frame */}
-          <View style={styles.overlayCenter}>
-            <View style={styles.frame}>
-              <View style={[styles.corner, styles.tl]} />
-              <View style={[styles.corner, styles.tr]} />
-              <View style={[styles.corner, styles.bl]} />
-              <View style={[styles.corner, styles.br]} />
-            </View>
-            <Text style={styles.hintText}>Arahkan kamera ke QR Code kartu siswa</Text>
+        />
+
+        {/* QR Viewfinder Target Frame rendered as overlay */}
+        <View style={styles.overlayCenter} pointerEvents="none">
+          <View style={styles.frame}>
+            <View style={[styles.corner, styles.tl]} />
+            <View style={[styles.corner, styles.tr]} />
+            <View style={[styles.corner, styles.bl]} />
+            <View style={[styles.corner, styles.br]} />
           </View>
-        </CameraView>
+          <Text style={styles.hintText}>Arahkan kamera ke QR Code kartu siswa</Text>
+        </View>
       </View>
 
       {/* Scanned Queue Sheet */}
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlayCenter: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
