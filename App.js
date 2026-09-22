@@ -46,6 +46,7 @@ const MainApp = () => {
       <>
         <StatusBar style="light" />
         <CheckInScreen
+          key={activeModal}
           mode={activeModal}
           onBack={() => setActiveModal(null)}
           onSuccess={() => setActiveModal(null)}

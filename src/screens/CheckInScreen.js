@@ -62,6 +62,23 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
   const cameraRef = useRef(null);
   const lastQrTimeRef = useRef(0);
 
+  // Synchronize and reset state whenever mode prop changes
+  useEffect(() => {
+    setCurrentMode(mode);
+    setPhotoUri(null);
+    setScannedQr(null);
+    setActiveStep('selfie');
+  }, [mode]);
+
+  // Handle switching between Absen Masuk and Absen Pulang
+  const switchMode = (newMode) => {
+    if (newMode === currentMode) return;
+    setCurrentMode(newMode);
+    setPhotoUri(null);
+    setScannedQr(null);
+    setActiveStep('selfie');
+  };
+
   // 1. Fetch School Attendance Settings (Radius, Coordinates)
   const fetchSettings = useCallback(async () => {
     try {
@@ -166,7 +183,11 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
         skipProcessing: false,
       });
       setPhotoUri(pic.uri);
-      setToast({ visible: true, message: '✓ Foto selfie berhasil diambil!', type: 'success' });
+      setToast({
+        visible: true,
+        message: `✓ Foto selfie ${currentMode === 'check-in' ? 'masuk' : 'pulang'} berhasil diambil!`,
+        type: 'success',
+      });
 
       // Automatically advance to QR step if not yet scanned
       if (!scannedQr) {
@@ -248,6 +269,9 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
       if (res.data?.success) {
         const actionLabel = currentMode === 'check-in' ? 'Absen Masuk' : 'Absen Pulang';
         setToast({ visible: true, message: `✓ ${actionLabel} berhasil dicatat!`, type: 'success' });
+        // Clear media states to ensure next attendance starts completely fresh
+        setPhotoUri(null);
+        setScannedQr(null);
         setTimeout(() => {
           if (onSuccess) onSuccess();
           onBack();
@@ -293,7 +317,7 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
       <View style={styles.modeContainer}>
         <TouchableOpacity
           style={[styles.modeTab, currentMode === 'check-in' && styles.modeTabActiveCheckIn]}
-          onPress={() => setCurrentMode('check-in')}
+          onPress={() => switchMode('check-in')}
         >
           <UserCheck size={16} color={currentMode === 'check-in' ? '#FFFFFF' : '#94A3B8'} style={{ marginRight: 6 }} />
           <Text style={[styles.modeTabText, currentMode === 'check-in' && styles.modeTabTextActive]}>Absen Masuk</Text>
@@ -301,7 +325,7 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
 
         <TouchableOpacity
           style={[styles.modeTab, currentMode === 'check-out' && styles.modeTabActiveCheckOut]}
-          onPress={() => setCurrentMode('check-out')}
+          onPress={() => switchMode('check-out')}
         >
           <LogOut size={16} color={currentMode === 'check-out' ? '#FFFFFF' : '#94A3B8'} style={{ marginRight: 6 }} />
           <Text style={[styles.modeTabText, currentMode === 'check-out' && styles.modeTabTextActive]}>Absen Pulang</Text>
@@ -342,7 +366,7 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
             {photoUri ? <Check size={12} color="#FFFFFF" /> : <Text style={styles.stepNumText}>1</Text>}
           </View>
           <Text style={[styles.stepBtnText, activeStep === 'selfie' && styles.stepBtnTextActive]}>
-            Foto Selfie {photoUri ? '✓' : ''}
+            Foto Selfie {currentMode === 'check-in' ? 'Masuk' : 'Pulang'} {photoUri ? '✓' : ''}
           </Text>
         </TouchableOpacity>
 
@@ -370,7 +394,9 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
                 <View style={styles.previewOverlay}>
                   <View style={styles.doneBadge}>
                     <CheckCircle2 size={16} color="#10B981" style={{ marginRight: 6 }} />
-                    <Text style={styles.doneBadgeText}>Foto Selfie Berhasil Diambil</Text>
+                    <Text style={styles.doneBadgeText}>
+                      Foto Selfie {currentMode === 'check-in' ? 'Masuk' : 'Pulang'} Berhasil Diambil
+                    </Text>
                   </View>
                   <TouchableOpacity style={styles.retakeBtn} onPress={() => setPhotoUri(null)}>
                     <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
@@ -384,7 +410,9 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
                 {/* Face Oval Guide Overlay */}
                 <View style={styles.faceOverlay} pointerEvents="none">
                   <View style={styles.faceOval} />
-                  <Text style={styles.faceHint}>Posisikan wajah Anda di dalam lingkaran</Text>
+                  <Text style={styles.faceHint}>
+                    Posisikan wajah Anda untuk foto absen {currentMode === 'check-in' ? 'masuk' : 'pulang'}
+                  </Text>
                 </View>
                 {/* Shutter Button */}
                 <View style={styles.shutterContainer}>
@@ -444,7 +472,9 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
         <View style={styles.checklistRow}>
           <View style={styles.checkItem}>
             <CheckCircle2 size={14} color={photoUri ? '#10B981' : '#64748B'} style={{ marginRight: 4 }} />
-            <Text style={[styles.checkText, photoUri && styles.checkTextDone]}>1. Selfie</Text>
+            <Text style={[styles.checkText, photoUri && styles.checkTextDone]}>
+              1. Selfie {currentMode === 'check-in' ? 'Masuk' : 'Pulang'}
+            </Text>
           </View>
           <View style={styles.checkItem}>
             <CheckCircle2 size={14} color={scannedQr ? '#10B981' : '#64748B'} style={{ marginRight: 4 }} />
@@ -475,7 +505,9 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
               <Send size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
               <Text style={styles.submitBtnText}>
                 {!photoUri
-                  ? 'Ambil Selfie Wajah Dulu (1)'
+                  ? currentMode === 'check-in'
+                    ? 'Ambil Selfie Masuk Dulu (1)'
+                    : 'Ambil Selfie Pulang Dulu (1)'
                   : !scannedQr
                   ? 'Scan QR Layar Sekolah Dulu (2)'
                   : !isWithinRadius
