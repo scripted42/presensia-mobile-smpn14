@@ -34,13 +34,16 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.warn('[API Error]', error?.message, error?.code, error?.response?.status, error?.config?.url);
     let message = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
     if (error.response) {
       // Server responded with an error status (4xx, 5xx)
       message = error.response.data?.message || `Error ${error.response.status}: Permintaan gagal diproses.`;
     } else if (error.request) {
       // The request was made but no response was received
-      message = 'Tidak dapat terhubung ke server Presensia. Pastikan internet Anda aktif.';
+      message = error.message 
+        ? `Tidak dapat terhubung ke server Presensia (${error.message}). Pastikan internet aktif.` 
+        : 'Tidak dapat terhubung ke server Presensia. Pastikan internet Anda aktif.';
     }
     error.formattedMessage = message;
     return Promise.reject(error);
