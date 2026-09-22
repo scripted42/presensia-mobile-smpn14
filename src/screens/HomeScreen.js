@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   RefreshCw,
   ChevronRight,
+  Users,
 } from 'lucide-react-native';
 
 const HomeScreen = ({ onNavigate }) => {
@@ -236,6 +237,24 @@ const HomeScreen = ({ onNavigate }) => {
                 </View>
                 <ChevronRight size={20} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
+
+              {/* Row 3: Riwayat Presensi Siswa */}
+              <TouchableOpacity
+                style={styles.studentHistoryBtn}
+                onPress={() => onNavigate('student-history')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.scanStudentLeft}>
+                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12, backgroundColor: '#EEF2FF' }]}>
+                    <Users size={22} color="#4F46E5" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.studentHistoryTitle}>Riwayat Presensi Siswa</Text>
+                    <Text style={styles.studentHistorySub}>Monitoring rekap harian, pencarian & filter kelas</Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color="#6366F1" />
+              </TouchableOpacity>
             </>
           )}
 
@@ -431,6 +450,32 @@ const styles = StyleSheet.create({
   scanStudentSub: {
     color: 'rgba(255,255,255,0.85)',
     fontSize: 11,
+  },
+  studentHistoryBtn: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#E0E7FF',
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  studentHistoryTitle: {
+    color: '#1E1B4B',
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  studentHistorySub: {
+    color: '#6366F1',
+    fontSize: 11,
+    fontWeight: '500',
   },
   actionBtn: {
     flex: 1,

@@ -10,13 +10,14 @@ import HomeScreen from './src/screens/HomeScreen';
 import CheckInScreen from './src/screens/CheckInScreen';
 import StudentScanScreen from './src/screens/StudentScanScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
+import StudentHistoryScreen from './src/screens/StudentHistoryScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import { Home, Calendar, User, ShieldCheck } from 'lucide-react-native';
 
 const MainApp = () => {
   const { user, loading } = useAuth();
   const [currentTab, setCurrentTab] = useState('home'); // 'home' | 'history' | 'profile'
-  const [activeModal, setActiveModal] = useState(null); // null | 'check-in' | 'scan-student'
+  const [activeModal, setActiveModal] = useState(null); // null | 'check-in' | 'scan-student' | 'student-history'
 
   if (loading) {
     return (
@@ -64,6 +65,15 @@ const MainApp = () => {
     );
   }
 
+  if (activeModal === 'student-history') {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <StudentHistoryScreen onBack={() => setActiveModal(null)} />
+      </>
+    );
+  }
+
   // Render current active tab screen
   const renderScreen = () => {
     switch (currentTab) {
@@ -103,7 +113,7 @@ const MainApp = () => {
         >
           <Calendar size={22} color={currentTab === 'history' ? '#2563EB' : '#94A3B8'} />
           <Text style={[styles.navLabel, currentTab === 'history' && styles.navLabelActive]}>
-            Riwayat
+            Riwayat Saya
           </Text>
         </TouchableOpacity>
 
