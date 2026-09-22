@@ -35,7 +35,10 @@ const HomeScreen = ({ onNavigate }) => {
         setTodayAttendance(response.data.data?.attendance || null);
       }
     } catch (e) {
-      console.warn('Gagal memuat status absensi hari ini:', e);
+      console.log('[HomeScreen] Gagal memuat status absensi:', e?.response?.status, e?.message);
+      if (e?.response?.status === 401) {
+        logout();
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

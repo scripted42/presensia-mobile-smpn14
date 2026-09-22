@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
+          client.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
 
           // Validate token with server in background
           client.get('/auth/me')
@@ -29,12 +30,15 @@ export const AuthProvider = ({ children }) => {
                 AsyncStorage.setItem('auth_user', JSON.stringify(refreshedUser));
               }
             })
-            .catch(() => {
-              // If token expired (401), clean up
+            .catch((err) => {
+              if (err?.response?.status === 401) {
+                // Token invalid or expired, reset session
+                logout();
+              }
             });
         }
       } catch (e) {
-        console.warn('Failed to restore session:', e);
+        console.log('Failed to restore session:', e?.message);
       } finally {
         setLoading(false);
       }
@@ -52,6 +56,7 @@ export const AuthProvider = ({ children }) => {
 
       if (response.data?.success && response.data?.data) {
         const { user: userData, token: authToken } = response.data.data;
+        client.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
         setUser(userData);
         setToken(authToken);
 
@@ -73,6 +78,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await client.post('/auth/logout').catch(() => {});
     } finally {
+      delete client.defaults.headers.common['Authorization'];
       setUser(null);
       setToken(null);
       await AsyncStorage.removeItem('auth_token');

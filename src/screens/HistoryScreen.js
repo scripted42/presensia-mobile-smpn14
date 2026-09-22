@@ -24,7 +24,7 @@ const HistoryScreen = ({ onBack }) => {
         setHistory(res.data.data);
       }
     } catch (e) {
-      console.warn('Gagal membaca riwayat:', e);
+      console.log('Gagal membaca riwayat:', e?.message);
     } finally {
       setLoading(false);
       setRefreshing(false);

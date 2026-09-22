@@ -3,12 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicat
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
-// Sembunyikan pesan deprecation dan warning CLI dari layar HP
-LogBox.ignoreLogs([
-  'SafeAreaView has been deprecated',
-  'Cannot connect to Expo CLI',
-  '<CameraView> component does not support children',
-]);
+// Sembunyikan seluruh banner warning development dari layar ponsel
+LogBox.ignoreAllLogs(true);
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import CheckInScreen from './src/screens/CheckInScreen';

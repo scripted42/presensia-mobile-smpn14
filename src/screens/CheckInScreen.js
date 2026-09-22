@@ -53,7 +53,7 @@ const CheckInScreen = ({ onBack, onSuccess }) => {
           setLocationName(`Koordinat: ${loc.coords.latitude.toFixed(4)}, ${loc.coords.longitude.toFixed(4)}`);
         }
       } catch (e) {
-        console.warn('Gagal membaca lokasi:', e);
+        console.log('Gagal membaca lokasi:', e?.message);
         setLocationName('Gagal mendeteksi lokasi GPS');
       }
     })();
