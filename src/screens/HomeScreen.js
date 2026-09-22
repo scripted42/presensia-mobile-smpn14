@@ -22,6 +22,7 @@ import {
   RefreshCw,
   ChevronRight,
   Users,
+  FileText,
 } from 'lucide-react-native';
 
 const HomeScreen = ({ onNavigate }) => {
@@ -255,19 +256,56 @@ const HomeScreen = ({ onNavigate }) => {
                 </View>
                 <ChevronRight size={20} color="#6366F1" />
               </TouchableOpacity>
+
+              {/* Row 4: Permohonan Izin & Cuti */}
+              <TouchableOpacity
+                style={styles.leaveBtn}
+                onPress={() => onNavigate('leave')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.scanStudentLeft}>
+                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12, backgroundColor: '#FEF3C7' }]}>
+                    <FileText size={22} color="#D97706" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.leaveTitle}>Permohonan Izin & Cuti</Text>
+                    <Text style={styles.leaveSub}>Pengajuan sakit/cuti & verifikasi persetujuan</Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color="#D97706" />
+              </TouchableOpacity>
             </>
           )}
 
           {/* Siswa Actions */}
           {isStudent && (
-            <View style={styles.studentCard}>
-              <QrCode size={36} color="#2563EB" style={{ marginBottom: 12 }} />
-              <Text style={styles.studentCardTitle}>QR Code Siswa</Text>
-              <Text style={styles.studentNisText}>NIS: {user?.nis || '-'}</Text>
-              <Text style={styles.studentCardDesc}>
-                Tunjukkan QR Code ini kepada guru piket / wali kelas saat tiba di sekolah untuk absensi harian.
-              </Text>
-            </View>
+            <>
+              <View style={styles.studentCard}>
+                <QrCode size={36} color="#2563EB" style={{ marginBottom: 12 }} />
+                <Text style={styles.studentCardTitle}>QR Code Siswa</Text>
+                <Text style={styles.studentNisText}>NIS: {user?.nis || '-'}</Text>
+                <Text style={styles.studentCardDesc}>
+                  Tunjukkan QR Code ini kepada guru piket / wali kelas saat tiba di sekolah untuk absensi harian.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.studentLeaveBtn}
+                onPress={() => onNavigate('leave')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.scanStudentLeft}>
+                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12, backgroundColor: '#FEF3C7' }]}>
+                    <FileText size={20} color="#D97706" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.leaveTitle}>Pengajuan Izin / Sakit</Text>
+                    <Text style={styles.leaveSub}>Ajukan izin tidak masuk & lampirkan surat dokter</Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color="#D97706" />
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </ScrollView>
@@ -474,6 +512,48 @@ const styles = StyleSheet.create({
   },
   studentHistorySub: {
     color: '#6366F1',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  leaveBtn: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#FEF3C7',
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  studentLeaveBtn: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#FEF3C7',
+    shadowColor: '#D97706',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+    marginTop: 12,
+  },
+  leaveTitle: {
+    color: '#0F172A',
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  leaveSub: {
+    color: '#D97706',
     fontSize: 11,
     fontWeight: '500',
   },

@@ -11,13 +11,14 @@ import CheckInScreen from './src/screens/CheckInScreen';
 import StudentScanScreen from './src/screens/StudentScanScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import StudentHistoryScreen from './src/screens/StudentHistoryScreen';
+import LeaveScreen from './src/screens/LeaveScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import { Home, Calendar, User, ShieldCheck } from 'lucide-react-native';
 
 const MainApp = () => {
   const { user, loading } = useAuth();
   const [currentTab, setCurrentTab] = useState('home'); // 'home' | 'history' | 'profile'
-  const [activeModal, setActiveModal] = useState(null); // null | 'check-in' | 'scan-student' | 'student-history'
+  const [activeModal, setActiveModal] = useState(null); // null | 'check-in' | 'scan-student' | 'student-history' | 'leave'
 
   if (loading) {
     return (
@@ -70,6 +71,15 @@ const MainApp = () => {
       <>
         <StatusBar style="dark" />
         <StudentHistoryScreen onBack={() => setActiveModal(null)} />
+      </>
+    );
+  }
+
+  if (activeModal === 'leave') {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <LeaveScreen onBack={() => setActiveModal(null)} />
       </>
     );
   }
