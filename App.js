@@ -48,7 +48,7 @@ const MainApp = () => {
   if (activeModal === 'check-in' || activeModal === 'check-out') {
     return (
       <>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <CheckInScreen
           key={activeModal}
           mode={activeModal}
@@ -62,7 +62,7 @@ const MainApp = () => {
   if (activeModal === 'scan-student') {
     return (
       <>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <StudentScanScreen onBack={() => setActiveModal(null)} />
       </>
     );

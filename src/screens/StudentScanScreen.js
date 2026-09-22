@@ -6,14 +6,25 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
-import { ArrowLeft, Flashlight, Trash2, Send, CheckCircle2, Users, AlertCircle } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Flashlight,
+  Trash2,
+  Send,
+  Users,
+  AlertCircle,
+  QrCode,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react-native';
 import Toast from '../components/Toast';
 
 const StudentScanScreen = ({ onBack }) => {
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [scannedList, setScannedList] = useState([]);
   const [torch, setTorch] = useState(false);
@@ -24,22 +35,30 @@ const StudentScanScreen = ({ onBack }) => {
   const lastScannedTimeRef = useRef(0);
 
   if (!permission) {
-    return <View style={styles.center}><ActivityIndicator color="#2563EB" /></View>;
+    return (
+      <View style={[styles.center, { paddingTop: insets.top }]}>
+        <ActivityIndicator color="#2563EB" size="large" />
+      </View>
+    );
   }
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
-        <AlertCircle size={48} color="#EF4444" style={{ marginBottom: 12 }} />
+      <View style={[styles.centerContainer, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
+        <View style={styles.permIconCircle}>
+          <AlertCircle size={44} color="#EF4444" />
+        </View>
         <Text style={styles.permTitle}>Izin Kamera Diperlukan</Text>
-        <Text style={styles.permSub}>Aplikasi memerlukan akses kamera untuk memindai QR Code siswa.</Text>
-        <TouchableOpacity style={styles.primaryBtn} onPress={requestPermission}>
-          <Text style={styles.primaryBtnText}>Izinkan Kamera</Text>
+        <Text style={styles.permSub}>
+          Aplikasi memerlukan akses kamera untuk memindai kartu QR Code siswa secara cepat.
+        </Text>
+        <TouchableOpacity style={styles.primaryBtn} onPress={requestPermission} activeOpacity={0.85}>
+          <Text style={styles.primaryBtnText}>Izinkan Akses Kamera</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.secondaryBtn} onPress={onBack}>
-          <Text style={styles.secondaryBtnText}>Kembali</Text>
+          <Text style={styles.secondaryBtnText}>Kembali ke Beranda</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -53,7 +72,11 @@ const StudentScanScreen = ({ onBack }) => {
 
     // Check if already in current scan queue
     if (scannedList.some((item) => item.code === data)) {
-      setToast({ visible: true, message: 'QR Siswa ini sudah masuk dalam daftar antrean.', type: 'warning' });
+      setToast({
+        visible: true,
+        message: 'QR Siswa ini sudah masuk dalam antrean pemindaian.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -98,7 +121,7 @@ const StudentScanScreen = ({ onBack }) => {
       const res = await client.post('/attendance/scan-student', { qr_codes: qrCodes });
 
       if (res.data?.success) {
-        const msg = res.data.message || `${qrCodes.length} siswa berhasil diabsen!`;
+        const msg = res.data.message || `${qrCodes.length} presensi siswa berhasil dicatat!`;
         setToast({ visible: true, message: msg, type: 'success' });
         setScannedList([]); // Clear queue on success
       } else {
@@ -118,7 +141,7 @@ const StudentScanScreen = ({ onBack }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -126,53 +149,72 @@ const StudentScanScreen = ({ onBack }) => {
         onHide={() => setToast({ ...toast, visible: false })}
       />
 
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onBack}>
-          <ArrowLeft size={20} color="#FFFFFF" />
+      {/* 1. TOP HEADER BAR (Unified App Standard) */}
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.7}>
+          <ArrowLeft size={20} color="#0F172A" />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Scan QR Siswa Masal</Text>
+
+        <View style={styles.topBarTitleCol}>
+          <Text style={styles.topBarTitle}>Scan QR Siswa</Text>
+          <Text style={styles.topBarSub}>Pemindaian Massal Presensi Siswa</Text>
+        </View>
+
         <TouchableOpacity
-          style={[styles.iconBtn, torch && styles.iconBtnActive]}
+          style={[styles.flashBtn, torch && styles.flashBtnActive]}
           onPress={() => setTorch(!torch)}
+          activeOpacity={0.7}
         >
-          <Flashlight size={20} color={torch ? '#F59E0B' : '#FFFFFF'} />
+          <Flashlight size={18} color={torch ? '#D97706' : '#64748B'} />
         </TouchableOpacity>
       </View>
 
-      {/* Camera Scanner Viewport */}
-      <View style={styles.cameraBox}>
-        <CameraView
-          style={StyleSheet.absoluteFill}
-          facing="back"
-          enableTorch={torch}
-          barcodeScannerSettings={{
-            barcodeTypes: ['qr'],
-          }}
-          onBarcodeScanned={handleBarcodeScanned}
-        />
+      {/* 2. CAMERA SCANNER VIEWPORT */}
+      <View style={styles.cameraWrapper}>
+        <View style={styles.cameraBox}>
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            enableTorch={torch}
+            barcodeScannerSettings={{
+              barcodeTypes: ['qr'],
+            }}
+            onBarcodeScanned={handleBarcodeScanned}
+          />
 
-        {/* QR Viewfinder Target Frame rendered as overlay */}
-        <View style={styles.overlayCenter} pointerEvents="none">
-          <View style={styles.frame}>
-            <View style={[styles.corner, styles.tl]} />
-            <View style={[styles.corner, styles.tr]} />
-            <View style={[styles.corner, styles.bl]} />
-            <View style={[styles.corner, styles.br]} />
+          {/* Viewfinder Target Frame Overlay */}
+          <View style={styles.overlayCenter} pointerEvents="none">
+            <View style={styles.frame}>
+              <View style={[styles.corner, styles.tl]} />
+              <View style={[styles.corner, styles.tr]} />
+              <View style={[styles.corner, styles.bl]} />
+              <View style={[styles.corner, styles.br]} />
+            </View>
+            <View style={styles.hintPill}>
+              <QrCode size={13} color="#FFFFFF" style={{ marginRight: 5 }} />
+              <Text style={styles.hintText}>Arahkan kamera ke QR Code kartu siswa</Text>
+            </View>
           </View>
-          <Text style={styles.hintText}>Arahkan kamera ke QR Code kartu siswa</Text>
         </View>
       </View>
 
-      {/* Scanned Queue Sheet */}
+      {/* 3. SCANNED QUEUE LIST CONTAINER */}
       <View style={styles.queueSheet}>
         <View style={styles.queueHeader}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Users size={16} color="#2563EB" style={{ marginRight: 6 }} />
-            <Text style={styles.queueTitle}>Antrean Siswa ({scannedList.length})</Text>
+          <View style={styles.queueTitleRow}>
+            <View style={styles.queueBadgeIcon}>
+              <Users size={15} color="#2563EB" />
+            </View>
+            <Text style={styles.queueTitle}>
+              Antrean Siswa
+            </Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{scannedList.length}</Text>
+            </View>
           </View>
+
           {scannedList.length > 0 && (
-            <TouchableOpacity onPress={handleClearAll} disabled={submitting}>
+            <TouchableOpacity onPress={handleClearAll} disabled={submitting} activeOpacity={0.7}>
               <Text style={styles.clearText}>Kosongkan</Text>
             </TouchableOpacity>
           )}
@@ -180,21 +222,37 @@ const StudentScanScreen = ({ onBack }) => {
 
         {scannedList.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyText}>Belum ada siswa yang dipindai.</Text>
-            <Text style={styles.emptySub}>Arahkan kamera ke QR Code siswa untuk mulai absensi.</Text>
+            <View style={styles.emptyIconCircle}>
+              <QrCode size={36} color="#94A3B8" />
+            </View>
+            <Text style={styles.emptyText}>Belum Ada Siswa Dipindai</Text>
+            <Text style={styles.emptySub}>
+              Dekatkan kartu QR siswa ke dalam bingkai kamera di atas untuk mencatat kehadiran.
+            </Text>
           </View>
         ) : (
           <FlatList
             data={scannedList}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => (
               <View style={styles.studentItem}>
+                <View style={styles.itemIndexCircle}>
+                  <Text style={styles.itemIndexText}>{scannedList.length - index}</Text>
+                </View>
                 <View style={styles.studentInfo}>
                   <Text style={styles.studentName} numberOfLines={1}>{item.name}</Text>
-                  <Text style={styles.studentTime}>Waktu: {item.time}</Text>
+                  <View style={styles.timeRow}>
+                    <Clock size={11} color="#64748B" style={{ marginRight: 4 }} />
+                    <Text style={styles.studentTime}>Pukul {item.time}</Text>
+                  </View>
                 </View>
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => handleRemove(item.id)}>
+                <TouchableOpacity
+                  style={styles.deleteBtn}
+                  onPress={() => handleRemove(item.id)}
+                  activeOpacity={0.7}
+                >
                   <Trash2 size={16} color="#EF4444" />
                 </TouchableOpacity>
               </View>
@@ -202,105 +260,153 @@ const StudentScanScreen = ({ onBack }) => {
           />
         )}
 
-        {/* Sync Button */}
+        {/* 4. SUBMIT / SYNC BUTTON (Safe Bottom Insets) */}
         {scannedList.length > 0 && (
-          <TouchableOpacity
-            style={[styles.syncBtn, submitting && styles.syncBtnDisabled]}
-            onPress={handleSyncAttendance}
-            disabled={submitting}
-            activeOpacity={0.85}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <View style={styles.btnInner}>
-                <Send size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.syncBtnText}>Kirim Absensi ({scannedList.length} Siswa)</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={[styles.actionFooter, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+            <TouchableOpacity
+              style={[styles.syncBtn, submitting && styles.syncBtnDisabled]}
+              onPress={handleSyncAttendance}
+              disabled={submitting}
+              activeOpacity={0.85}
+            >
+              {submitting ? (
+                <View style={styles.btnInner}>
+                  <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 8 }} />
+                  <Text style={styles.syncBtnText}>Menyimpan Presensi...</Text>
+                </View>
+              ) : (
+                <View style={styles.btnInner}>
+                  <Send size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.syncBtnText}>
+                    Kirim Presensi ({scannedList.length} Siswa)
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F8FAFC',
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBtnActive: {
-    backgroundColor: 'rgba(245,158,11,0.25)',
+  topBarTitleCol: {
+    alignItems: 'center',
   },
   topBarTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F172A',
+  },
+  topBarSub: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  flashBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flashBtnActive: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  cameraWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
   },
   cameraBox: {
-    height: 280,
-    marginHorizontal: 16,
-    borderRadius: 24,
+    height: 250,
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#000',
-  },
-  camera: {
-    flex: 1,
+    backgroundColor: '#0F172A',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
   overlayCenter: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(15, 23, 42, 0.25)',
   },
   frame: {
-    width: 190,
-    height: 190,
+    width: 170,
+    height: 170,
     position: 'relative',
   },
   corner: {
     position: 'absolute',
-    width: 24,
-    height: 24,
+    width: 26,
+    height: 26,
     borderColor: '#3B82F6',
     borderWidth: 4,
   },
-  tl: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 6 },
-  tr: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 6 },
-  bl: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 6 },
-  br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 6 },
+  tl: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 8 },
+  tr: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 8 },
+  bl: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 8 },
+  br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 8 },
+  hintPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 99,
+    marginTop: 14,
+  },
   hintText: {
     color: '#FFFFFF',
     fontSize: 11,
-    marginTop: 14,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 99,
+    fontWeight: '600',
   },
   queueSheet: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: 14,
-    padding: 18,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 3,
   },
   queueHeader: {
     flexDirection: 'row',
@@ -308,10 +414,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  queueTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  queueBadgeIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
   queueTitle: {
     fontSize: 14,
     fontWeight: '800',
     color: '#0F172A',
+  },
+  countBadge: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 99,
+    marginLeft: 8,
+  },
+  countBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
   },
   clearText: {
     fontSize: 12,
@@ -319,18 +450,31 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   listContent: {
-    paddingBottom: 10,
+    paddingBottom: 12,
   },
   studentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#F8FAFC',
     borderRadius: 14,
-    padding: 12,
+    padding: 10,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+  },
+  itemIndexCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  itemIndexText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
   },
   studentInfo: {
     flex: 1,
@@ -338,48 +482,71 @@ const styles = StyleSheet.create({
   studentName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#0F172A',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
   },
   studentTime: {
     fontSize: 11,
     color: '#64748B',
-    marginTop: 2,
   },
   deleteBtn: {
-    padding: 6,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
   },
   emptyBox: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  emptyIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   emptyText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#334155',
     marginBottom: 4,
   },
   emptySub: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#94A3B8',
     textAlign: 'center',
+    lineHeight: 18,
+  },
+  actionFooter: {
+    paddingTop: 10,
   },
   syncBtn: {
     backgroundColor: '#059669',
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 14,
+    paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
     shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
     elevation: 3,
   },
   syncBtnDisabled: {
-    opacity: 0.65,
+    opacity: 0.6,
   },
   btnInner: {
     flexDirection: 'row',
@@ -394,7 +561,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F8FAFC',
   },
   centerContainer: {
     flex: 1,
@@ -402,6 +569,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     backgroundColor: '#F8FAFC',
+  },
+  permIconCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   permTitle: {
     fontSize: 18,
@@ -413,14 +589,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    marginBottom: 20,
+    lineHeight: 19,
+    marginBottom: 24,
+    maxWidth: 280,
   },
   primaryBtn: {
     backgroundColor: '#2563EB',
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderRadius: 14,
-    marginBottom: 10,
+    marginBottom: 12,
+    width: '100%',
+    alignItems: 'center',
   },
   primaryBtnText: {
     color: '#FFFFFF',
@@ -433,6 +613,7 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     color: '#64748B',
     fontSize: 13,
+    fontWeight: '600',
   },
 });
 
