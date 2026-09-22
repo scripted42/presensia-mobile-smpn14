@@ -41,11 +41,15 @@ const MainApp = () => {
   }
 
   // Active full-screen action screens (Camera / Scan)
-  if (activeModal === 'check-in') {
+  if (activeModal === 'check-in' || activeModal === 'check-out') {
     return (
       <>
         <StatusBar style="light" />
-        <CheckInScreen onBack={() => setActiveModal(null)} onSuccess={() => setActiveModal(null)} />
+        <CheckInScreen
+          mode={activeModal}
+          onBack={() => setActiveModal(null)}
+          onSuccess={() => setActiveModal(null)}
+        />
       </>
     );
   }

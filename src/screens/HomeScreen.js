@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   RefreshCw,
+  ChevronRight,
 } from 'lucide-react-native';
 
 const HomeScreen = ({ onNavigate }) => {
@@ -181,34 +182,59 @@ const HomeScreen = ({ onNavigate }) => {
         </View>
 
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Aksi Cepat</Text>
+        <Text style={styles.sectionTitle}>Aksi Presensi</Text>
 
-        <View style={styles.actionsGrid}>
+        <View style={styles.actionsContainer}>
           {/* Guru / Pegawai Actions */}
           {!isStudent && (
             <>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#2563EB' }]}
-                onPress={() => onNavigate('check-in')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.actionIconCircle}>
-                  <UserCheck size={22} color="#2563EB" />
-                </View>
-                <Text style={styles.actionBtnTitle}>Absensi Selfie</Text>
-                <Text style={styles.actionBtnSub}>Kamera depan & GPS</Text>
-              </TouchableOpacity>
+              {/* Row 1: Absen Masuk & Absen Pulang */}
+              <View style={styles.actionsGrid}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: '#2563EB' }]}
+                  onPress={() => onNavigate('check-in')}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.actionIconCircle}>
+                    <UserCheck size={22} color="#2563EB" />
+                  </View>
+                  <Text style={styles.actionBtnTitle}>Absen Masuk</Text>
+                  <Text style={styles.actionBtnSub}>
+                    {todayAttendance?.check_in ? '✓ Sudah Masuk' : 'Selfie, GPS & QR'}
+                  </Text>
+                </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: '#D97706' }]}
+                  onPress={() => onNavigate('check-out')}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.actionIconCircle}>
+                    <LogOut size={22} color="#D97706" />
+                  </View>
+                  <Text style={styles.actionBtnTitle}>Absen Pulang</Text>
+                  <Text style={styles.actionBtnSub}>
+                    {todayAttendance?.check_out ? '✓ Sudah Pulang' : 'Selfie, GPS & QR'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Row 2: Scan QR Siswa */}
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#059669' }]}
+                style={styles.scanStudentBtn}
                 onPress={() => onNavigate('scan-student')}
                 activeOpacity={0.85}
               >
-                <View style={styles.actionIconCircle}>
-                  <QrCode size={22} color="#059669" />
+                <View style={styles.scanStudentLeft}>
+                  <View style={[styles.actionIconCircle, { marginBottom: 0, marginRight: 12 }]}>
+                    <QrCode size={22} color="#059669" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.scanStudentTitle}>Scan QR Presensi Siswa</Text>
+                    <Text style={styles.scanStudentSub}>Pemindaian batch siswa di kelas / gerbang</Text>
+                  </View>
                 </View>
-                <Text style={styles.actionBtnTitle}>Scan QR Siswa</Text>
-                <Text style={styles.actionBtnSub}>Absensi masal siswa</Text>
+                <ChevronRight size={20} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
             </>
           )}
@@ -371,9 +397,40 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 12,
   },
+  actionsContainer: {
+    gap: 12,
+  },
   actionsGrid: {
     flexDirection: 'row',
     gap: 12,
+  },
+  scanStudentBtn: {
+    backgroundColor: '#059669',
+    borderRadius: 18,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  scanStudentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  scanStudentTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  scanStudentSub: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 11,
   },
   actionBtn: {
     flex: 1,
