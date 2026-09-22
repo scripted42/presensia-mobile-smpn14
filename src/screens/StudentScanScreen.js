@@ -102,12 +102,14 @@ const StudentScanScreen = ({ onBack }) => {
         setToast({ visible: true, message: msg, type: 'success' });
         setScannedList([]); // Clear queue on success
       } else {
-        setToast({ visible: true, message: res.data?.message || 'Gagal menyimpan absensi masal.', type: 'error' });
+        const errMsg = res.data?.message || 'Gagal menyimpan absensi masal.';
+        setToast({ visible: true, message: errMsg, type: 'error' });
       }
     } catch (e) {
+      const errMsg = e.response?.data?.message || e.formattedMessage || 'Gagal mengirim data absensi.';
       setToast({
         visible: true,
-        message: e.formattedMessage || e.response?.data?.message || 'Gagal mengirim data absensi.',
+        message: errMsg,
         type: 'error',
       });
     } finally {

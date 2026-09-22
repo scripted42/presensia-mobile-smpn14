@@ -34,7 +34,7 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.warn('[API Error]', error?.message, error?.code, error?.response?.status, error?.config?.url);
+    console.log('[API Error]', error?.message, error?.code, error?.response?.status, error?.config?.url);
     let message = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
     if (error.response) {
       // Server responded with an error status (4xx, 5xx)
