@@ -483,6 +483,7 @@ const HistoryScreen = ({ onBack }) => {
       </View>
     </View>
   );
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
