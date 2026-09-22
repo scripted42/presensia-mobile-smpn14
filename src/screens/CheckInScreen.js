@@ -83,8 +83,8 @@ const CheckInScreen = ({ onBack, onSuccess }) => {
     if (!cameraRef.current) return;
     try {
       const pic = await cameraRef.current.takePictureAsync({
-        quality: 0.6,
-        skipProcessing: true,
+        quality: 0.5,
+        skipProcessing: false,
       });
       setPhotoUri(pic.uri);
     } catch (e) {
