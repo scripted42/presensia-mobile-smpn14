@@ -12,6 +12,8 @@ import {
   Image,
   Dimensions,
   ScrollView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import client from '../api/client';
 import {
@@ -45,6 +47,49 @@ const MONTH_SHORT = [
 ];
 
 const YEARS = [2024, 2025, 2026, 2027];
+
+// Clean formatting helpers for date & time
+const formatDateClean = (dateVal, formattedVal) => {
+  if (formattedVal && typeof formattedVal === 'string' && !formattedVal.includes('T')) {
+    return formattedVal;
+  }
+  if (!dateVal) return '-';
+  const str = String(dateVal).trim();
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  } catch (_) {}
+  return str.substring(0, 10);
+};
+
+const formatTimeClean = (val) => {
+  if (!val) return '-- : --';
+  const str = String(val).trim();
+  const isoMatch = str.match(/T(\d{2}):(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[1]}:${isoMatch[2]}`;
+  }
+  const timeMatch = str.match(/^(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    return `${timeMatch[1]}:${timeMatch[2]}`;
+  }
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+  } catch (_) {}
+  return str.substring(0, 5);
+};
 
 const HistoryScreen = ({ onBack }) => {
   const today = new Date();
@@ -170,66 +215,71 @@ const HistoryScreen = ({ onBack }) => {
   };
 
   // Header Component for FlatList (Stats + Chart + Filters)
-  const renderListHeader = () => (
-    <View style={styles.headerContainer}>
-      {/* 1. Main KPI Card (Total Masuk & Percentage) */}
-      <View style={styles.kpiCard}>
-        <View style={styles.kpiTopRow}>
-          <View>
-            <Text style={styles.kpiLabel}>Total Masuk Pegawai</Text>
-            <View style={styles.kpiValueRow}>
-              <Text style={styles.kpiMainNumber}>{stats.total_masuk}</Text>
-              <Text style={styles.kpiTotalDays}> / {stats.working_days} Hari Efektif</Text>
+  const renderListHeader = () => {
+    const totalMasuk = stats.total_masuk ?? stats.present_days ?? 0;
+    const workingDays = Math.round(Number(stats.working_days || stats.total_days || 22));
+    const ontimeCount = stats.ontime_days ?? 0;
+    const lateCount = stats.late_days ?? 0;
+    const otherCount = (stats.sick_days || 0) + (stats.permit_days || 0) + (stats.leave_days || 0);
+
+    return (
+      <View style={styles.headerContainer}>
+        {/* 1. Main KPI Card (Total Masuk & Percentage) */}
+        <View style={styles.kpiCard}>
+          <View style={styles.kpiTopRow}>
+            <View>
+              <Text style={styles.kpiLabel}>Total Masuk Pegawai</Text>
+              <View style={styles.kpiValueRow}>
+                <Text style={styles.kpiMainNumber}>{totalMasuk}</Text>
+                <Text style={styles.kpiTotalDays}> / {workingDays} Hari Efektif</Text>
+              </View>
+            </View>
+            <View style={styles.percentageBadge}>
+              <TrendingUp size={16} color="#2563EB" style={{ marginRight: 4 }} />
+              <Text style={styles.percentageText}>{stats.attendance_percentage}%</Text>
             </View>
           </View>
-          <View style={styles.percentageBadge}>
-            <TrendingUp size={16} color="#2563EB" style={{ marginRight: 4 }} />
-            <Text style={styles.percentageText}>{stats.attendance_percentage}%</Text>
+
+          {/* Attendance Progress Bar */}
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressBar,
+                { width: `${Math.min(100, Math.max(0, stats.attendance_percentage))}%` },
+              ]}
+            />
           </View>
         </View>
 
-        {/* Attendance Progress Bar */}
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressBar,
-              { width: `${Math.min(100, Math.max(0, stats.attendance_percentage))}%` },
-            ]}
-          />
-        </View>
-      </View>
-
-      {/* 2. Grid of 3 Specific KPI Cards */}
-      <View style={styles.statsGrid}>
-        {/* Tepat Waktu */}
-        <View style={[styles.statBox, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
-          <View style={styles.statIconBadgeGreen}>
-            <CheckCircle2 size={16} color="#059669" />
+        {/* 2. Grid of 3 Specific KPI Cards */}
+        <View style={styles.statsGrid}>
+          {/* Tepat Waktu */}
+          <View style={[styles.statBox, { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' }]}>
+            <View style={styles.statIconBadgeGreen}>
+              <CheckCircle2 size={16} color="#059669" />
+            </View>
+            <Text style={[styles.statCount, { color: '#065F46' }]}>{ontimeCount}</Text>
+            <Text style={[styles.statTitle, { color: '#047857' }]}>Tepat Waktu</Text>
           </View>
-          <Text style={[styles.statCount, { color: '#065F46' }]}>{stats.ontime_days}</Text>
-          <Text style={[styles.statTitle, { color: '#047857' }]}>Tepat Waktu</Text>
-        </View>
 
-        {/* Terlambat */}
-        <View style={[styles.statBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
-          <View style={styles.statIconBadgeOrange}>
-            <Clock size={16} color="#D97706" />
+          {/* Terlambat */}
+          <View style={[styles.statBox, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+            <View style={styles.statIconBadgeOrange}>
+              <Clock size={16} color="#D97706" />
+            </View>
+            <Text style={[styles.statCount, { color: '#92400E' }]}>{lateCount}</Text>
+            <Text style={[styles.statTitle, { color: '#B45309' }]}>Terlambat</Text>
           </View>
-          <Text style={[styles.statCount, { color: '#92400E' }]}>{stats.late_days}</Text>
-          <Text style={[styles.statTitle, { color: '#B45309' }]}>Terlambat</Text>
-        </View>
 
-        {/* Izin / Sakit */}
-        <View style={[styles.statBox, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-          <View style={styles.statIconBadgeBlue}>
-            <Calendar size={16} color="#2563EB" />
+          {/* Izin / Sakit */}
+          <View style={[styles.statBox, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+            <View style={styles.statIconBadgeBlue}>
+              <Calendar size={16} color="#2563EB" />
+            </View>
+            <Text style={[styles.statCount, { color: '#1E40AF' }]}>{otherCount}</Text>
+            <Text style={[styles.statTitle, { color: '#1D4ED8' }]}>Izin / Sakit</Text>
           </View>
-          <Text style={[styles.statCount, { color: '#1E40AF' }]}>
-            {(stats.sick_days || 0) + (stats.permit_days || 0) + (stats.leave_days || 0)}
-          </Text>
-          <Text style={[styles.statTitle, { color: '#1D4ED8' }]}>Izin / Sakit</Text>
         </View>
-      </View>
 
       {/* 3. Weekly Attendance Bar Chart */}
       {weeklyChart.length > 0 && (
@@ -387,7 +437,9 @@ const HistoryScreen = ({ onBack }) => {
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.dateBadgeContainer}>
                     <Calendar size={14} color="#64748B" style={{ marginRight: 6 }} />
-                    <Text style={styles.dateFullText}>{item.date_formatted || item.date}</Text>
+                    <Text style={styles.dateFullText}>
+                      {formatDateClean(item.date, item.date_formatted)}
+                    </Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
                     <View style={[styles.statusDot, { backgroundColor: badge.dot }]} />
@@ -402,7 +454,7 @@ const HistoryScreen = ({ onBack }) => {
                     <View style={styles.timeValRow}>
                       <Clock size={14} color="#059669" style={{ marginRight: 4 }} />
                       <Text style={[styles.timeValText, item.check_in ? { color: '#0F172A' } : { color: '#94A3B8' }]}>
-                        {item.check_in || '-- : --'}
+                        {formatTimeClean(item.check_in)}
                       </Text>
                     </View>
                   </View>
@@ -414,7 +466,7 @@ const HistoryScreen = ({ onBack }) => {
                     <View style={styles.timeValRow}>
                       <Clock size={14} color="#D97706" style={{ marginRight: 4 }} />
                       <Text style={[styles.timeValText, item.check_out ? { color: '#0F172A' } : { color: '#94A3B8' }]}>
-                        {item.check_out || '-- : --'}
+                        {formatTimeClean(item.check_out)}
                       </Text>
                     </View>
                   </View>
@@ -543,7 +595,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 12,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
