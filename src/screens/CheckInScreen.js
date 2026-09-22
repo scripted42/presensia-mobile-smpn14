@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import client from '../api/client';
 import {
   ArrowLeft,
+  ArrowRight,
   Camera,
   RefreshCw,
   CheckCircle2,
@@ -46,16 +47,21 @@ function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
 
 const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
   const insets = useSafeAreaInsets();
-  const [currentMode, setCurrentMode] = useState(mode); // 'check-in' | 'check-out'
+  const [currentMode, setCurrentMode] = useState(mode); // 'check-in' or 'check-out'
   const [activeStep, setActiveStep] = useState('selfie'); // 'selfie' | 'qr'
-  const [permission, requestPermission] = useCameraPermissions();
 
-  // Location & Settings
+  // Location & School Data
   const [location, setLocation] = useState(null);
   const [locationName, setLocationName] = useState('Mendeteksi GPS...');
   const [schoolSettings, setSchoolSettings] = useState(null);
   const [distanceMeters, setDistanceMeters] = useState(null);
-  const [isWithinRadius, setIsWithinRadius] = useState(true);
+  const [isWithinRadius, setIsWithinRadius] = useState(false);
+
+  // Camera & Permissions
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraKey, setCameraKey] = useState(0);
+  const [takingPhoto, setTakingPhoto] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
 
   // Media & Inputs
   const [photoUri, setPhotoUri] = useState(null);
@@ -191,7 +197,8 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
 
   // Handle Capture Selfie Photo
   const handleSnap = async () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || takingPhoto) return;
+    setTakingPhoto(true);
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.75,
@@ -203,21 +210,25 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
         const actionLabel = currentMode === 'check-in' ? 'Masuk' : 'Pulang';
         setToast({
           visible: true,
-          message: `✓ Foto selfie ${actionLabel} berhasil diambil! Silakan scan QR code layar (Langkah 2).`,
+          message: `✓ Foto selfie ${actionLabel} berhasil diambil!`,
           type: 'success',
         });
-        // Otomatis lanjut ke langkah 2: Scan QR Display TV
-        setActiveStep('qr');
+        // Beri jeda 400ms agar hardware kamera Android menyelesaikan capture sebelum beralih ke QR
+        setTimeout(() => {
+          setActiveStep('qr');
+        }, 400);
       }
     } catch (e) {
       console.log('Error takePicture:', e?.message);
       setToast({ visible: true, message: 'Gagal mengambil foto selfie.', type: 'error' });
+    } finally {
+      setTakingPhoto(false);
     }
   };
 
   // Handle QR Code Scanned from TV Screen (display-qr)
   const handleBarcodeScanned = ({ data }) => {
-    if (!data || activeStep !== 'qr') return;
+    if (!data || activeStep !== 'qr' || scannedQr) return;
 
     const now = Date.now();
     if (now - lastQrTimeRef.current < 2000) return;
@@ -318,7 +329,7 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
 
       {/* 1. TOP HEADER (Standard App Format) */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+        <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.7}>
           <ArrowLeft size={20} color="#0F172A" />
         </TouchableOpacity>
         <View style={styles.topBarTitleCol}>
@@ -327,7 +338,16 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
           </Text>
           <Text style={styles.topBarSub}>Foto Selfie & Scan QR Layar TV</Text>
         </View>
-        <View style={{ width: 38 }} />
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => {
+            setCameraKey((k) => k + 1);
+            setToast({ visible: true, message: 'Sensor kamera dimuat ulang', type: 'info' });
+          }}
+          activeOpacity={0.7}
+        >
+          <RefreshCw size={17} color="#64748B" />
+        </TouchableOpacity>
       </View>
 
       {/* 2. MODE SELECTOR PILLS (Masuk vs Pulang) */}
@@ -406,85 +426,109 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
 
       {/* 5. CAMERA VIEWPORT */}
       <View style={styles.viewport}>
-        {/* STEP 1: SELFIE CAMERA (Kamera Depan) */}
-        {activeStep === 'selfie' && (
+        {/* The SINGLE Persistent Camera View - Facing switches reactively without unmounting/destroying surface */}
+        <CameraView
+          key={`cam-${cameraKey}`}
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          facing={activeStep === 'selfie' ? 'front' : 'back'}
+          barcodeScannerSettings={
+            activeStep === 'qr' && !scannedQr ? { barcodeTypes: ['qr'] } : undefined
+          }
+          onBarcodeScanned={
+            activeStep === 'qr' && !scannedQr ? handleBarcodeScanned : undefined
+          }
+          onCameraReady={() => setCameraReady(true)}
+        />
+
+        {/* OVERLAY 1: Photo Preview (when activeStep === 'selfie' and photoUri is present) */}
+        {activeStep === 'selfie' && photoUri && (
           <View style={StyleSheet.absoluteFill}>
-            {photoUri ? (
-              <View style={StyleSheet.absoluteFill}>
-                <Image source={{ uri: photoUri }} style={styles.previewImage} />
-                <View style={styles.previewOverlay}>
-                  <View style={styles.doneBadge}>
-                    <CheckCircle2 size={16} color="#10B981" style={{ marginRight: 6 }} />
-                    <Text style={styles.doneBadgeText}>
-                      Foto Selfie {currentMode === 'check-in' ? 'Masuk' : 'Pulang'} Berhasil
-                    </Text>
-                  </View>
-                  <TouchableOpacity style={styles.retakeBtn} onPress={() => setPhotoUri(null)}>
-                    <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.retakeBtnText}>Ambil Ulang Foto</Text>
-                  </TouchableOpacity>
-                </View>
+            <Image source={{ uri: photoUri }} style={styles.previewImage} />
+            <View style={styles.previewOverlay}>
+              <View style={styles.doneBadge}>
+                <CheckCircle2 size={16} color="#10B981" style={{ marginRight: 6 }} />
+                <Text style={styles.doneBadgeText}>
+                  Foto Selfie {currentMode === 'check-in' ? 'Masuk' : 'Pulang'} Tersimpan
+                </Text>
               </View>
-            ) : (
-              <View style={StyleSheet.absoluteFill}>
-                <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="front" />
-                {/* Face Oval Guide Overlay */}
-                <View style={styles.faceOverlay} pointerEvents="none">
-                  <View style={styles.faceOval} />
-                  <Text style={styles.faceHint}>
-                    Posisikan wajah Anda pada oval untuk foto absen {currentMode === 'check-in' ? 'masuk' : 'pulang'}
-                  </Text>
-                </View>
-                {/* Shutter Button */}
-                <View style={styles.shutterContainer}>
-                  <TouchableOpacity style={styles.shutterOuter} onPress={handleSnap}>
-                    <View style={styles.shutterInner} />
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.previewBtnRow}>
+                <TouchableOpacity
+                  style={styles.retakeBtn}
+                  onPress={() => setPhotoUri(null)}
+                  activeOpacity={0.8}
+                >
+                  <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.retakeBtnText}>Ambil Ulang</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.nextStepBtn}
+                  onPress={() => setActiveStep('qr')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.nextStepBtnText}>Lanjut Scan QR</Text>
+                  <ArrowRight size={14} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                </TouchableOpacity>
               </View>
-            )}
+            </View>
           </View>
         )}
 
-        {/* STEP 2: QR SCANNER (Kamera Belakang dari Layar TV) */}
-        {activeStep === 'qr' && (
-          <View style={StyleSheet.absoluteFill}>
-            {scannedQr ? (
-              <View style={styles.qrDoneContainer}>
-                <CheckCircle2 size={54} color="#10B981" style={{ marginBottom: 12 }} />
-                <Text style={styles.qrDoneTitle}>QR Layar Sekolah Terdeteksi!</Text>
-                <Text style={styles.qrDoneSub} numberOfLines={2}>
-                  Kode: {scannedQr.substring(0, 16)}...
-                </Text>
-                <TouchableOpacity style={styles.rescanBtn} onPress={() => setScannedQr(null)}>
-                  <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <Text style={styles.rescanBtnText}>Scan Ulang QR</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={StyleSheet.absoluteFill}>
-                <CameraView
-                  style={StyleSheet.absoluteFill}
-                  facing="back"
-                  barcodeScannerSettings={{
-                    barcodeTypes: ['qr'],
-                  }}
-                  onBarcodeScanned={handleBarcodeScanned}
-                />
-                {/* QR Target Viewfinder */}
-                <View style={styles.qrOverlay} pointerEvents="none">
-                  <View style={styles.qrFrame}>
-                    <View style={[styles.corner, styles.tl]} />
-                    <View style={[styles.corner, styles.tr]} />
-                    <View style={[styles.corner, styles.bl]} />
-                    <View style={[styles.corner, styles.br]} />
-                  </View>
-                  <Text style={styles.qrHint}>
-                    Arahkan kamera ke QR Code dinamis pada layar TV lobby sekolah
-                  </Text>
-                </View>
-              </View>
-            )}
+        {/* OVERLAY 2: Selfie Active Guide & Shutter (when activeStep === 'selfie' and no photo yet) */}
+        {activeStep === 'selfie' && !photoUri && (
+          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+            {/* Face Oval Guide Overlay */}
+            <View style={styles.faceOverlay} pointerEvents="none">
+              <View style={styles.faceOval} />
+              <Text style={styles.faceHint}>
+                Posisikan wajah Anda pada oval untuk foto absen {currentMode === 'check-in' ? 'masuk' : 'pulang'}
+              </Text>
+            </View>
+            {/* Shutter Button */}
+            <View style={styles.shutterContainer}>
+              <TouchableOpacity
+                style={[styles.shutterOuter, takingPhoto && { opacity: 0.5 }]}
+                onPress={handleSnap}
+                disabled={takingPhoto}
+                activeOpacity={0.8}
+              >
+                <View style={styles.shutterInner} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* OVERLAY 3: QR Scanner Viewfinder Guide (when activeStep === 'qr' and not yet scanned) */}
+        {activeStep === 'qr' && !scannedQr && (
+          <View style={styles.qrOverlay} pointerEvents="none">
+            <View style={styles.qrFrame}>
+              <View style={[styles.corner, styles.tl]} />
+              <View style={[styles.corner, styles.tr]} />
+              <View style={[styles.corner, styles.bl]} />
+              <View style={[styles.corner, styles.br]} />
+            </View>
+            <Text style={styles.qrHint}>
+              Arahkan kamera ke QR Code dinamis pada layar TV lobby sekolah
+            </Text>
+          </View>
+        )}
+
+        {/* OVERLAY 4: QR Detected Success Screen (when activeStep === 'qr' and scannedQr is present) */}
+        {activeStep === 'qr' && scannedQr && (
+          <View style={styles.qrDoneContainer}>
+            <CheckCircle2 size={54} color="#10B981" style={{ marginBottom: 12 }} />
+            <Text style={styles.qrDoneTitle}>QR Layar Sekolah Terdeteksi!</Text>
+            <Text style={styles.qrDoneSub} numberOfLines={2}>
+              Kode: {scannedQr.substring(0, 20)}...
+            </Text>
+            <TouchableOpacity
+              style={styles.rescanBtn}
+              onPress={() => setScannedQr(null)}
+              activeOpacity={0.8}
+            >
+              <RefreshCw size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.rescanBtnText}>Scan Ulang QR</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -789,6 +833,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  previewBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   retakeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -798,6 +847,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   retakeBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  nextStepBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  nextStepBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
