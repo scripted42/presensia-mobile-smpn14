@@ -236,6 +236,9 @@ const StudentScanScreen = ({ onBack }) => {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={6}
+            maxToRenderPerBatch={8}
+            windowSize={5}
             renderItem={({ item, index }) => (
               <View style={styles.studentItem}>
                 <View style={styles.itemIndexCircle}>

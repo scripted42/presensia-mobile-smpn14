@@ -424,9 +424,14 @@ const StudentHistoryScreen = ({ onBack }) => {
       ) : (
         <FlatList
           data={filteredStudents}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item, index) => (item.id ? String(item.id) : `stu-${index}`)}
           ListHeaderComponent={renderHeader}
           contentContainerStyle={styles.listContent}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
+          updateCellsBatchingPeriod={50}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
           }

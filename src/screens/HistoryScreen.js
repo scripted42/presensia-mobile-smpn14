@@ -522,9 +522,14 @@ const HistoryScreen = ({ onBack }) => {
       ) : (
         <FlatList
           data={filteredAttendances}
-          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+          keyExtractor={(item, index) => (item.id ? String(item.id) : `att-${item.date || index}`)}
           ListHeaderComponent={renderListHeader}
           contentContainerStyle={styles.listContainer}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
+          updateCellsBatchingPeriod={50}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
           }

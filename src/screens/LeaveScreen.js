@@ -500,8 +500,13 @@ const LeaveScreen = ({ onBack }) => {
           ) : (
             <FlatList
               data={filteredMyLeaves}
-              keyExtractor={(item) => String(item.id)}
+              keyExtractor={(item, index) => (item.id ? String(item.id) : `leave-${index}`)}
               contentContainerStyle={styles.listContent}
+              initialNumToRender={8}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              removeClippedSubviews={Platform.OS === 'android'}
+              updateCellsBatchingPeriod={50}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
               }
@@ -762,8 +767,13 @@ const LeaveScreen = ({ onBack }) => {
           ) : (
             <FlatList
               data={approvals}
-              keyExtractor={(item) => String(item.id)}
+              keyExtractor={(item, index) => (item.id ? String(item.id) : `approval-${index}`)}
               contentContainerStyle={styles.listContent}
+              initialNumToRender={8}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              removeClippedSubviews={Platform.OS === 'android'}
+              updateCellsBatchingPeriod={50}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
               }
