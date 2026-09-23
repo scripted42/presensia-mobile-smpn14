@@ -59,15 +59,15 @@ const LoginScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Brand Header */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('../../assets/icon.png')}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+            <Image
+              source={require('../../assets/presensia-logo.png')}
+              style={styles.brandLogo}
+              resizeMode="contain"
+            />
+            <View style={styles.schoolBadge}>
+              <Text style={styles.schoolBadgeText}>SMP NEGERI 14 SURABAYA</Text>
             </View>
-            <Text style={styles.brandTitle}>Presensia Mobile</Text>
-            <Text style={styles.brandSubtitle}>SMP Negeri 14 Surabaya</Text>
+            <Text style={styles.brandSubtitle}>Sistem Presensi & Kehadiran Digital</Text>
           </View>
 
           {/* Form Card */}
@@ -157,40 +157,32 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 26,
+    marginTop: 6,
   },
-  logoContainer: {
-    width: 76,
-    height: 76,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
+  brandLogo: {
+    width: 220,
+    height: 44,
+    marginBottom: 10,
+  },
+  schoolBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 99,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
-    padding: 8,
+    borderColor: '#DBEAFE',
+    marginBottom: 4,
   },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 14,
-  },
-  brandTitle: {
-    fontSize: 22,
+  schoolBadgeText: {
+    fontSize: 11,
     fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.5,
+    color: '#1D4ED8',
+    letterSpacing: 0.5,
   },
   brandSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748B',
-    marginTop: 3,
     fontWeight: '500',
   },
   card: {
