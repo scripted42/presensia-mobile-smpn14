@@ -430,7 +430,7 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
         <CameraView
           key={`cam-${cameraKey}`}
           ref={cameraRef}
-          style={StyleSheet.absoluteFill}
+          style={styles.cameraFill}
           facing={activeStep === 'selfie' ? 'front' : 'back'}
           barcodeScannerSettings={
             activeStep === 'qr' && !scannedQr ? { barcodeTypes: ['qr'] } : undefined
@@ -866,8 +866,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  cameraFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
   faceOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -944,9 +959,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   qrOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   qrFrame: {
     width: 240,
@@ -965,7 +987,7 @@ const styles = StyleSheet.create({
   br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 10 },
   qrHintContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 24,
     left: 20,
     right: 20,
     alignItems: 'center',

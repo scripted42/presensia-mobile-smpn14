@@ -173,7 +173,7 @@ const StudentScanScreen = ({ onBack }) => {
       <View style={styles.cameraWrapper}>
         <View style={styles.cameraBox}>
           <CameraView
-            style={StyleSheet.absoluteFill}
+            style={styles.cameraFill}
             facing="back"
             enableTorch={torch}
             barcodeScannerSettings={{
@@ -352,17 +352,33 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     overflow: 'hidden',
     backgroundColor: '#0F172A',
+    position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 5,
   },
+  cameraFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
   overlayCenter: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.25)',
+    backgroundColor: 'transparent',
   },
   frame: {
     width: 240,
@@ -382,12 +398,12 @@ const styles = StyleSheet.create({
   br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 10 },
   hintPill: {
     position: 'absolute',
-    bottom: 18,
+    bottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(15, 23, 42, 0.85)',
     paddingHorizontal: 16,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: 99,
   },
   hintText: {
