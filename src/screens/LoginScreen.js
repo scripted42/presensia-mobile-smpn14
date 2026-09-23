@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -58,8 +59,12 @@ const LoginScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Brand Header */}
           <View style={styles.header}>
-            <View style={styles.iconCircle}>
-              <ShieldCheck size={36} color="#2563EB" />
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../assets/icon.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
             <Text style={styles.brandTitle}>Presensia Mobile</Text>
             <Text style={styles.brandSubtitle}>SMP Negeri 14 Surabaya</Text>
@@ -154,16 +159,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 28,
   },
-  iconCircle: {
-    width: 68,
-    height: 68,
+  logoContainer: {
+    width: 76,
+    height: 76,
     borderRadius: 22,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#DBEAFE',
+    borderColor: '#E2E8F0',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+    padding: 8,
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
   },
   brandTitle: {
     fontSize: 22,
