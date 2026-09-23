@@ -34,6 +34,23 @@ import {
   TrendingUp,
 } from 'lucide-react-native';
 
+const formatTimeClean = (val) => {
+  if (!val) return '--:--';
+  const str = String(val).trim();
+  if (/^\d{2}:\d{2}/.test(str)) {
+    return str.substring(0, 5);
+  }
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+  } catch (_) {}
+  return str.substring(0, 5);
+};
+
 const StudentHistoryScreen = ({ onBack }) => {
   // Date state (default today: YYYY-MM-DD)
   const getTodayStr = () => {
@@ -468,9 +485,9 @@ const StudentHistoryScreen = ({ onBack }) => {
                   <View style={styles.timeInfoCol}>
                     <Clock size={13} color="#64748B" style={{ marginRight: 4 }} />
                     <Text style={styles.timeLabelText}>
-                      Masuk: <Text style={styles.timeValText}>{item.check_in || '--:--'}</Text>
+                      Masuk: <Text style={styles.timeValText}>{formatTimeClean(item.check_in)}</Text>
                       {'   •   '}
-                      Pulang: <Text style={styles.timeValText}>{item.check_out || '--:--'}</Text>
+                      Pulang: <Text style={styles.timeValText}>{formatTimeClean(item.check_out)}</Text>
                     </Text>
                   </View>
 

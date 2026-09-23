@@ -30,10 +30,17 @@ const ActivitySection = ({ activities = [], loading = false, onViewAllPress }) =
   const formatTimeStr = (val) => {
     if (!val) return '--:--';
     const str = String(val).trim();
-    const isoMatch = str.match(/T(\d{2}):(\d{2})/);
-    if (isoMatch) return `${isoMatch[1]}:${isoMatch[2]}`;
-    const timeMatch = str.match(/^(\d{2}):(\d{2})/);
-    if (timeMatch) return `${timeMatch[1]}:${timeMatch[2]}`;
+    if (/^\d{2}:\d{2}/.test(str)) {
+      return str.substring(0, 5);
+    }
+    try {
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        return `${h}:${m}`;
+      }
+    } catch (_) {}
     return str.substring(0, 5);
   };
 
