@@ -14,7 +14,7 @@ import {
   Modal,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 import {
   Search,
@@ -52,6 +52,7 @@ const formatTimeClean = (val) => {
 };
 
 const StudentHistoryScreen = ({ onBack }) => {
+  const insets = useSafeAreaInsets();
   // Date state (default today: YYYY-MM-DD)
   const getTodayStr = () => {
     const d = new Date();
@@ -402,9 +403,9 @@ const StudentHistoryScreen = ({ onBack }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       {/* Top Header Bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft size={20} color="#0F172A" />
         </TouchableOpacity>
@@ -535,12 +536,12 @@ const StudentHistoryScreen = ({ onBack }) => {
           )}
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
@@ -549,7 +550,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 12,
     paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,

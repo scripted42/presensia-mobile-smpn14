@@ -14,7 +14,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 import {
   Calendar,
@@ -141,6 +141,7 @@ const generateCalendarMatrix = (month, year, attendancesList) => {
 };
 
 const HistoryScreen = ({ onBack }) => {
+  const insets = useSafeAreaInsets();
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 1-12
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
@@ -481,9 +482,9 @@ const HistoryScreen = ({ onBack }) => {
 };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       {/* Top Bar Header */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <ArrowLeft size={20} color="#0F172A" />
         </TouchableOpacity>
@@ -696,12 +697,12 @@ const HistoryScreen = ({ onBack }) => {
           )}
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
@@ -710,7 +711,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 12,
     paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
