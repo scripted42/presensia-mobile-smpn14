@@ -29,16 +29,7 @@ const MainApp = () => {
   };
 
   if (loading) {
-    return (
-      <View style={styles.splash}>
-        <View style={styles.splashIcon}>
-          <ShieldCheck size={48} color="#2563EB" />
-        </View>
-        <Text style={styles.splashTitle}>Presensia Mobile</Text>
-        <Text style={styles.splashSub}>SMP Negeri 14 Surabaya</Text>
-        <ActivityIndicator color="#2563EB" size="large" style={{ marginTop: 24 }} />
-      </View>
-    );
+    return null;
   }
 
   if (!user) {
@@ -225,33 +216,6 @@ const styles = StyleSheet.create({
   navLabelActive: {
     color: '#2563EB',
     fontWeight: '800',
-  },
-  splash: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splashIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-  },
-  splashTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  splashSub: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 4,
   },
 });
 
