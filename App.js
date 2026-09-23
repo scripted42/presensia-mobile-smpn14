@@ -21,6 +21,11 @@ const MainApp = () => {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState('home'); // 'home' | 'history' | 'profile'
   const [activeModal, setActiveModal] = useState(null); // null | 'check-in' | 'scan-student' | 'student-history' | 'leave'
+  const [homeRefreshKey, setHomeRefreshKey] = useState(0);
+
+  const refreshHome = () => {
+    setHomeRefreshKey((k) => k + 1);
+  };
 
   if (loading) {
     return (
@@ -52,8 +57,14 @@ const MainApp = () => {
         <CheckInScreen
           key={activeModal}
           mode={activeModal}
-          onBack={() => setActiveModal(null)}
-          onSuccess={() => setActiveModal(null)}
+          onBack={() => {
+            setActiveModal(null);
+            refreshHome();
+          }}
+          onSuccess={() => {
+            setActiveModal(null);
+            refreshHome();
+          }}
         />
       </>
     );
@@ -63,7 +74,12 @@ const MainApp = () => {
     return (
       <>
         <StatusBar style="dark" />
-        <StudentScanScreen onBack={() => setActiveModal(null)} />
+        <StudentScanScreen
+          onBack={() => {
+            setActiveModal(null);
+            refreshHome();
+          }}
+        />
       </>
     );
   }
@@ -81,7 +97,12 @@ const MainApp = () => {
     return (
       <>
         <StatusBar style="dark" />
-        <LeaveScreen onBack={() => setActiveModal(null)} />
+        <LeaveScreen
+          onBack={() => {
+            setActiveModal(null);
+            refreshHome();
+          }}
+        />
       </>
     );
   }
@@ -96,6 +117,7 @@ const MainApp = () => {
       default:
         return (
           <HomeScreen
+            refreshTrigger={homeRefreshKey}
             onNavigate={(screen) => {
               if (screen === 'history-tab') {
                 setCurrentTab('history');

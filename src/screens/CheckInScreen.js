@@ -507,9 +507,11 @@ const CheckInScreen = ({ mode = 'check-in', onBack, onSuccess }) => {
               <View style={[styles.corner, styles.bl]} />
               <View style={[styles.corner, styles.br]} />
             </View>
-            <Text style={styles.qrHint}>
-              Arahkan kamera ke QR Code dinamis pada layar TV lobby sekolah
-            </Text>
+            <View style={styles.qrHintContainer}>
+              <Text style={styles.qrHint}>
+                Arahkan kamera ke QR Code dinamis pada layar TV lobby sekolah
+              </Text>
+            </View>
           </View>
         )}
 
@@ -953,25 +955,31 @@ const styles = StyleSheet.create({
   },
   corner: {
     position: 'absolute',
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     borderColor: '#10B981',
   },
-  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4 },
-  tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4 },
-  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4 },
-  br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4 },
+  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 6 },
+  tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 6 },
+  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 6 },
+  br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 6 },
+  qrHintContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+  },
   qrHint: {
     color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
-    marginTop: 20,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 8,
-    maxWidth: 240,
+    maxWidth: 260,
   },
   bottomContainer: {
     backgroundColor: '#FFFFFF',

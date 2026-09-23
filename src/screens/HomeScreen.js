@@ -18,7 +18,7 @@ import QuickMenuGrid from '../components/home/QuickMenuGrid';
 import ActivitySection from '../components/home/ActivitySection';
 import StudentQrModal from '../components/home/StudentQrModal';
 
-const HomeScreen = ({ onNavigate }) => {
+const HomeScreen = ({ onNavigate, refreshTrigger }) => {
   const insets = useSafeAreaInsets();
   const { user, logout, isStudent } = useAuth();
 
@@ -48,8 +48,19 @@ const HomeScreen = ({ onNavigate }) => {
     const pToday = client
       .get('/attendance/today')
       .then((res) => {
-        if (res.data?.success) {
-          setTodayAttendance(res.data.data?.attendance || null);
+        if (res.data?.success && res.data?.data) {
+          const d = res.data.data;
+          const att = d.attendance || (d.has_checked_in ? {
+            check_in: d.check_in || d.check_in_time,
+            check_out: d.check_out || d.check_out_time,
+            status: d.status,
+            status_label: d.status_label,
+            location_name: d.location_name,
+            photo_url: d.photo_url,
+          } : null);
+          setTodayAttendance(att);
+        } else {
+          setTodayAttendance(null);
         }
       })
       .catch((e) => {
@@ -96,7 +107,7 @@ const HomeScreen = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchHomeData();
-  }, [fetchHomeData]);
+  }, [fetchHomeData, refreshTrigger]);
 
   const onRefresh = () => {
     setRefreshing(true);

@@ -47,8 +47,10 @@ const HighlightCard = ({
     return str.substring(0, 5);
   };
 
-  const hasCheckIn = Boolean(todayAttendance?.check_in);
-  const hasCheckOut = Boolean(todayAttendance?.check_out);
+  const checkInVal = todayAttendance?.check_in || todayAttendance?.check_in_time;
+  const checkOutVal = todayAttendance?.check_out || todayAttendance?.check_out_time;
+  const hasCheckIn = Boolean(checkInVal || todayAttendance?.has_checked_in);
+  const hasCheckOut = Boolean(checkOutVal || todayAttendance?.has_checked_out);
 
   // Status Badge Logic
   const getStatusInfo = () => {
@@ -118,14 +120,14 @@ const HighlightCard = ({
       <View style={styles.timesContainer}>
         <View style={styles.timeBox}>
           <Text style={styles.timeBoxLabel}>Jam Masuk</Text>
-          <Text style={styles.timeBoxValue}>{formatTimeStr(todayAttendance?.check_in)}</Text>
+          <Text style={styles.timeBoxValue}>{formatTimeStr(checkInVal)}</Text>
         </View>
 
         <View style={styles.timeDivider} />
 
         <View style={styles.timeBox}>
           <Text style={styles.timeBoxLabel}>Jam Pulang</Text>
-          <Text style={styles.timeBoxValue}>{formatTimeStr(todayAttendance?.check_out)}</Text>
+          <Text style={styles.timeBoxValue}>{formatTimeStr(checkOutVal)}</Text>
         </View>
       </View>
 
