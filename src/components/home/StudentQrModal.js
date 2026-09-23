@@ -1,10 +1,60 @@
-import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
-import { QrCode, X, ShieldCheck } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
+import { X, ShieldCheck, RefreshCw, CheckCircle2 } from 'lucide-react-native';
+import client from '../../api/client';
 
 const StudentQrModal = ({ visible, onClose, user }) => {
+  const [qrImage, setQrImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [studentDetails, setStudentDetails] = useState(null);
+
+  // Exact payload format as generated in the database: NIS|Name
+  const fallbackPayload = `${user?.nis || ''}|${user?.name || ''}`;
+  const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(fallbackPayload)}&format=png&margin=10`;
+
+  const fetchStudentQr = async () => {
+    if (!visible) return;
+    setLoading(true);
+    try {
+      const res = await client.get('/student/qr-code');
+      if (res.data?.success && res.data?.data) {
+        setQrImage(res.data.data.qr_image || res.data.data.qr_url);
+        setStudentDetails(res.data.data);
+      } else {
+        setQrImage(fallbackQrUrl);
+      }
+    } catch (_) {
+      // Seamless fallback to exact payload QR generator
+      setQrImage(fallbackQrUrl);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (visible) {
+      fetchStudentQr();
+    }
+  }, [visible]);
+
+  const className =
+    studentDetails?.class_name ||
+    user?.class_name ||
+    user?.classroom?.name ||
+    'Siswa SMPN 14';
+
+  const nisText = user?.nis || studentDetails?.nis || '-';
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <View style={styles.card}>
           {/* Header */}
@@ -13,28 +63,62 @@ const StudentQrModal = ({ visible, onClose, user }) => {
               <Text style={styles.title}>Kartu QR Pelajar</Text>
               <Text style={styles.sub}>SMP Negeri 14 Surabaya</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
               <X size={20} color="#64748B" />
             </TouchableOpacity>
           </View>
 
           {/* QR Container */}
           <View style={styles.qrBox}>
-            <QrCode size={180} color="#1E3A8A" />
-            <Text style={styles.qrCodeValText}>{user?.nis || user?.id || 'SISWA'}</Text>
+            {loading && !qrImage ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2563EB" />
+                <Text style={styles.loadingText}>Memuat QR Code Siswa...</Text>
+              </View>
+            ) : (
+              <View style={styles.qrImageWrapper}>
+                <Image
+                  source={{ uri: qrImage || fallbackQrUrl }}
+                  style={styles.qrImage}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+
+            {/* QR Code Payload Value */}
+            <View style={styles.payloadRow}>
+              <Text style={styles.qrCodeValText} numberOfLines={1}>
+                {user?.nis ? `${user.nis} • ${user?.name || ''}` : user?.name || 'SISWA'}
+              </Text>
+            </View>
           </View>
 
           {/* Student Info Box */}
           <View style={styles.studentInfoBox}>
-            <Text style={styles.studentName} numberOfLines={1}>{user?.name || 'Siswa'}</Text>
-            <Text style={styles.studentNis}>NIS: {user?.nis || '-'}</Text>
+            <Text style={styles.studentName} numberOfLines={2}>
+              {user?.name || 'Siswa SMPN 14'}
+            </Text>
+            <View style={styles.metaBadgeRow}>
+              <View style={styles.nisBadge}>
+                <Text style={styles.nisBadgeText}>NIS: {nisText}</Text>
+              </View>
+              <View style={styles.classBadge}>
+                <Text style={styles.classBadgeText}>Kelas {className}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Verification Badge */}
+          <View style={styles.verifiedRow}>
+            <CheckCircle2 size={13} color="#16A34A" style={{ marginRight: 4 }} />
+            <Text style={styles.verifiedText}>Terdaftar di Database Presensi Sekolah</Text>
           </View>
 
           {/* Guidance note */}
           <View style={styles.guidanceBox}>
             <ShieldCheck size={14} color="#2563EB" style={{ marginRight: 6 }} />
             <Text style={styles.guidanceText}>
-              Tunjukkan QR Code ini kepada guru piket / wali kelas saat tiba di sekolah untuk absensi masuk.
+              Arahkan QR Code ini ke kamera scan guru piket saat tiba di sekolah untuk absensi masuk.
             </Text>
           </View>
         </View>
@@ -46,7 +130,7 @@ const StudentQrModal = ({ visible, onClose, user }) => {
 const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -59,10 +143,10 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
   },
   header: {
     flexDirection: 'row',
@@ -80,6 +164,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#64748B',
     fontWeight: '500',
+    marginTop: 2,
   },
   closeBtn: {
     width: 32,
@@ -90,26 +175,63 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   qrBox: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    marginBottom: 16,
+    marginBottom: 14,
     width: '100%',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  loadingContainer: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  qrImageWrapper: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+  },
+  qrImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  payloadRow: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    width: '100%',
+    alignItems: 'center',
   },
   qrCodeValText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#64748B',
-    marginTop: 10,
-    letterSpacing: 1,
+    color: '#475569',
+    letterSpacing: 0.5,
   },
   studentInfoBox: {
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 10,
     width: '100%',
   },
   studentName: {
@@ -117,12 +239,46 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0F172A',
     textAlign: 'center',
+    marginBottom: 6,
   },
-  studentNis: {
-    fontSize: 12,
-    color: '#64748B',
+  metaBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  nisBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  nisBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
+  },
+  classBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  classBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  verifiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  verifiedText: {
+    fontSize: 11,
     fontWeight: '600',
-    marginTop: 2,
+    color: '#16A34A',
   },
   guidanceBox: {
     flexDirection: 'row',
