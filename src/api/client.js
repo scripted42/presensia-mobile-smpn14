@@ -11,13 +11,15 @@ const client = axios.create({
     'Accept': 'application/json',
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
+    'User-Agent': 'PresensiaMobile/1.0.0 (Android)',
   },
 });
 
-// Auto-attach Bearer token to every authenticated request
+// Auto-attach Bearer token and User-Agent to every authenticated request
 client.interceptors.request.use(
   async (config) => {
     try {
+      config.headers['User-Agent'] = 'PresensiaMobile/1.0.0 (Android)';
       const token = await AsyncStorage.getItem('auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;

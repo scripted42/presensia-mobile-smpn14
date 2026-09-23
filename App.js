@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 // Sembunyikan seluruh banner warning development dari layar ponsel
+LogBox.ignoreLogs(['SafeAreaView has been deprecated']);
 LogBox.ignoreAllLogs(true);
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
