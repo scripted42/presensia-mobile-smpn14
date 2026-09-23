@@ -35,7 +35,7 @@ const LoginScreen = () => {
     }
 
     setLoading(true);
-    const result = await login(identifier.trim(), password);
+    const result = await login(identifier.trim(), password.trim());
     setLoading(false);
 
     if (!result.success) {
