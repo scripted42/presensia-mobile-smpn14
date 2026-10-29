@@ -1,0 +1,178 @@
+<svg width="390" height="844" viewBox="0 0 390 844" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad2" x1="195" y1="0" x2="195" y2="844" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EFF6FF" />
+      <stop offset="30%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+
+    <!-- Flame Gradient -->
+    <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="50%" stop-color="#EA580C" />
+      <stop offset="100%" stop-color="#C2410C" />
+    </linearGradient>
+
+    <!-- XP Bar Gradient -->
+    <linearGradient id="xpGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+
+    <!-- Card Shadow -->
+    <filter id="cardShadow2" x="-10" y="-5" width="410" height="120" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.05" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="390" height="844" rx="40" fill="url(#bgGrad2)" />
+
+  <!-- Status Bar -->
+  <g id="StatusBar">
+    <text x="32" y="38" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#0F172A">09:41</text>
+    <circle cx="330" cy="34" r="3" fill="#0F172A" />
+    <circle cx="340" cy="34" r="3" fill="#0F172A" />
+    <rect x="350" y="28" width="20" height="12" rx="3" fill="none" stroke="#0F172A" stroke-width="2" />
+    <rect x="352" y="30" width="12" height="8" rx="1.5" fill="#0F172A" />
+  </g>
+
+  <!-- Top App Bar -->
+  <g id="TopAppBar">
+    <rect x="20" y="56" width="40" height="40" rx="12" fill="#FFFFFF" filter="url(#cardShadow2)" />
+    <path d="M43 76L37 76M37 76L41 72M37 76L41 80" stroke="#0F172A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <text x="75" y="74" font-family="Inter, sans-serif" font-size="18" font-weight="800" fill="#0F172A">Profil & Lencana</text>
+    <text x="75" y="90" font-family="Inter, sans-serif" font-size="12" font-weight="500" fill="#64748B">SMP Negeri 14 Surabaya</text>
+
+    <!-- Settings Gear Icon -->
+    <rect x="330" y="56" width="40" height="40" rx="12" fill="#FFFFFF" filter="url(#cardShadow2)" />
+    <circle cx="350" cy="76" r="6" fill="none" stroke="#64748B" stroke-width="2" />
+    <path d="M350 68V70M350 82V84M342 76H344M356 76H358" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- STUDENT PROFILE CARD -->
+  <g id="StudentProfileCard" transform="translate(20, 114)" filter="url(#cardShadow2)">
+    <rect width="350" height="180" rx="20" fill="#FFFFFF" />
+    
+    <!-- Avatar Circle -->
+    <rect x="20" y="20" width="60" height="60" rx="30" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="2" />
+    <text x="50" y="56" text-anchor="middle" font-family="Inter, sans-serif" font-size="22" font-weight="800" fill="#2563EB">AR</text>
+
+    <!-- Student Info -->
+    <text x="92" y="38" font-family="Inter, sans-serif" font-size="16" font-weight="800" fill="#0F172A">Ahmad Rayhan</text>
+    <text x="92" y="54" font-family="Inter, sans-serif" font-size="12" font-weight="500" fill="#64748B">NIS: 14082 • Siswa Kelas VIII-B</text>
+
+    <!-- Badges count chip -->
+    <rect x="92" y="62" width="100" height="20" rx="10" fill="#FEF3C7" />
+    <text x="142" y="76" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#B45309">🎖️ 3 Koleksi Lencana</text>
+
+    <!-- Divider Line -->
+    <line x1="20" y1="94" x2="330" y2="94" stroke="#F1F5F9" stroke-width="1.5" />
+
+    <!-- STREAK BANNER & XP -->
+    <!-- Left: Streak Counter -->
+    <g transform="translate(20, 106)">
+      <rect width="130" height="58" rx="12" fill="#FFF7ED" />
+      <text x="28" y="28" font-size="20">🔥</text>
+      <text x="54" y="28" font-family="Inter, sans-serif" font-size="18" font-weight="900" fill="#C2410C">14 Hari</text>
+      <text x="54" y="44" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#EA580C">Streak Tepat Waktu</text>
+    </g>
+
+    <!-- Right: Level & XP Bar -->
+    <g transform="translate(160, 106)">
+      <rect width="170" height="58" rx="12" fill="#F8FAFC" />
+      <text x="14" y="22" font-family="Inter, sans-serif" font-size="11" font-weight="800" fill="#023C69">Level 4: Disiplin Tangguh</text>
+      
+      <!-- Progress Bar Track -->
+      <rect x="14" y="29" width="142" height="8" rx="4" fill="#E2E8F0" />
+      <!-- Progress Bar Fill (72%) -->
+      <rect x="14" y="29" width="102" height="8" rx="4" fill="url(#xpGrad)" />
+      
+      <text x="14" y="49" font-family="Inter, sans-serif" font-size="9" font-weight="600" fill="#64748B">1.450 / 2.000 XP (+550 XP lagi)</text>
+    </g>
+  </g>
+
+  <!-- SECTION TITLE -->
+  <text x="24" y="324" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#0F172A">Koleksi Lencana Disiplin</text>
+  <text x="366" y="324" text-anchor="end" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#2563EB">3/6 Terbuka</text>
+
+  <!-- BADGES 2x3 GRID -->
+  <!-- Badge 1: Early Bird (Unlocked) -->
+  <g id="Badge1" transform="translate(20, 338)" filter="url(#cardShadow2)">
+    <rect width="168" height="120" rx="16" fill="#FFFFFF" stroke="#FEF08A" stroke-width="1.5" />
+    <circle cx="84" cy="42" r="26" fill="#FEF9C3" />
+    <text x="84" y="49" text-anchor="middle" font-size="24">⏰</text>
+    <text x="84" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#0F172A">Early Bird</text>
+    <text x="84" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#64748B">10x Datang &lt; 06.30</text>
+  </g>
+
+  <!-- Badge 2: Streak Master (Unlocked) -->
+  <g id="Badge2" transform="translate(202, 338)" filter="url(#cardShadow2)">
+    <rect width="168" height="120" rx="16" fill="#FFFFFF" stroke="#FED7AA" stroke-width="1.5" />
+    <circle cx="84" cy="42" r="26" fill="#FFEDD5" />
+    <text x="84" y="49" text-anchor="middle" font-size="24">🔥</text>
+    <text x="84" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#0F172A">Streak Master</text>
+    <text x="84" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#64748B">14 Hari Tanpa Telat</text>
+  </g>
+
+  <!-- Badge 3: Hadir 100% (Unlocked) -->
+  <g id="Badge3" transform="translate(20, 470)" filter="url(#cardShadow2)">
+    <rect width="168" height="120" rx="16" fill="#FFFFFF" stroke="#BFDBFE" stroke-width="1.5" />
+    <circle cx="84" cy="42" r="26" fill="#DBEAFE" />
+    <text x="84" y="49" text-anchor="middle" font-size="24">🛡️</text>
+    <text x="84" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#0F172A">Hadir 100%</text>
+    <text x="84" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#64748B">Bulan Oktober Sempurna</text>
+  </g>
+
+  <!-- Badge 4: Ketua Disiplin (LOCKED) -->
+  <g id="Badge4" transform="translate(202, 470)" filter="url(#cardShadow2)">
+    <rect width="168" height="120" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4 4" />
+    <circle cx="84" cy="42" r="26" fill="#E2E8F0" />
+    <text x="84" y="49" text-anchor="middle" font-size="20">🔒</text>
+    <text x="84" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#94A3B8">Ketua Disiplin</text>
+    <text x="84" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#94A3B8">Juara 1 di Kelas</text>
+  </g>
+
+  <!-- Badge 5: Semangat Pagi (LOCKED) -->
+  <g id="Badge5" transform="translate(20, 602)" filter="url(#cardShadow2)">
+    <rect width="168" height="120" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4 4" />
+    <circle cx="84" cy="42" r="26" fill="#E2E8F0" />
+    <text x="84" y="49" text-anchor="middle" font-size="20">🔒</text>
+    <text x="84" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#94A3B8">Semangat Pagi</text>
+    <text x="84" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#94A3B8">Absen Tercepat No.1</text>
+  </g>
+
+  <!-- Badge 6: Pejuang Senin (LOCKED) -->
+  <g id="Badge6" transform="translate(202, 602)" filter="url(#cardShadow2)">
+    <rect width="168" height="120" rx="16" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4 4" />
+    <circle cx="84" cy="42" r="26" fill="#E2E8F0" />
+    <text x="84" y="49" text-anchor="middle" font-size="20">🔒</text>
+    <text x="84" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#94A3B8">Pejuang Senin</text>
+    <text x="84" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="500" fill="#94A3B8">Upacara Tepat Waktu</text>
+  </g>
+
+  <!-- Bottom Navigation -->
+  <g id="BottomNavBar" transform="translate(0, 754)">
+    <rect width="390" height="90" fill="#FFFFFF" filter="url(#cardShadow2)" />
+    
+    <!-- Home Tab -->
+    <g transform="translate(65, 14)">
+      <path d="M12 3L3 10V20C3 20.5 3.5 21 4 21H20C20.5 21 21 20.5 21 20V10L12 3Z" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="12" y="32" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#94A3B8">Beranda</text>
+    </g>
+
+    <!-- Leaderboard Tab -->
+    <g transform="translate(195, 14)">
+      <path d="M-6 16V4M0 16V-2M6 16V8" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="0" y="32" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#94A3B8">Peringkat</text>
+    </g>
+
+    <!-- Profile Tab (Active) -->
+    <g transform="translate(325, 14)">
+      <rect x="-24" y="-4" width="48" height="32" rx="16" fill="#EFF6FF" />
+      <path d="M4 21V19C4 16.8 5.8 15 8 15H16C18.2 15 20 16.8 20 19V21M12 11C9.8 11 8 9.2 8 7C8 4.8 9.8 3 12 3C14.2 3 16 4.8 16 7C16 9.2 14.2 11 12 11Z" fill="none" stroke="#023C69" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="12" y="32" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="800" fill="#023C69">Profil</text>
+    </g>
+  </g>
+</svg>
