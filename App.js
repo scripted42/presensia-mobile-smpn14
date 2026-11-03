@@ -15,7 +15,8 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import StudentHistoryScreen from './src/screens/StudentHistoryScreen';
 import LeaveScreen from './src/screens/LeaveScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
-import { Home, Calendar, User, ShieldCheck } from 'lucide-react-native';
+import StudentLeaderboardScreen from './src/screens/StudentLeaderboardScreen';
+import { Home, Calendar, User, ShieldCheck, Trophy } from 'lucide-react-native';
 
 const MainApp = () => {
   const { user, loading } = useAuth();
@@ -99,9 +100,28 @@ const MainApp = () => {
     );
   }
 
+  const isStudent = user?.role === 'siswa' || !!user?.nis || user?.role_name === 'Siswa';
+
   // Render current active tab screen
   const renderScreen = () => {
     switch (currentTab) {
+      case 'leaderboard':
+        return (
+          <StudentLeaderboardScreen
+            onBack={() => setCurrentTab('home')}
+            onNavigate={(screen) => {
+              if (screen === 'history-tab') {
+                setCurrentTab('history');
+              } else if (screen === 'profile-tab') {
+                setCurrentTab('profile');
+              } else {
+                setActiveModal(screen);
+              }
+            }}
+            user={user}
+            isStudent={isStudent}
+          />
+        );
       case 'history':
         return <HistoryScreen onBack={() => setCurrentTab('home')} />;
       case 'profile':
@@ -115,6 +135,8 @@ const MainApp = () => {
                 setCurrentTab('history');
               } else if (screen === 'profile-tab') {
                 setCurrentTab('profile');
+              } else if (screen === 'leaderboard-tab') {
+                setCurrentTab('leaderboard');
               } else {
                 setActiveModal(screen);
               }
@@ -146,12 +168,23 @@ const MainApp = () => {
 
         <TouchableOpacity
           style={styles.navItem}
+          onPress={() => setCurrentTab('leaderboard')}
+          activeOpacity={0.7}
+        >
+          <Trophy size={22} color={currentTab === 'leaderboard' ? '#023C69' : '#94A3B8'} />
+          <Text style={[styles.navLabel, currentTab === 'leaderboard' && { color: '#023C69', fontWeight: '800' }]}>
+            Peringkat
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
           onPress={() => setCurrentTab('history')}
           activeOpacity={0.7}
         >
           <Calendar size={22} color={currentTab === 'history' ? '#2563EB' : '#94A3B8'} />
           <Text style={[styles.navLabel, currentTab === 'history' && styles.navLabelActive]}>
-            Riwayat Saya
+            {isStudent ? 'Riwayat' : 'Riwayat Saya'}
           </Text>
         </TouchableOpacity>
 

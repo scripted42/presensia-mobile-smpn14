@@ -90,11 +90,16 @@ const StudentScanScreen = ({ onBack }) => {
       displayName = `${parts[1]} (${parts[0]})`;
     }
 
+    const scanDate = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const scannedAt = `${scanDate.getFullYear()}-${pad(scanDate.getMonth() + 1)}-${pad(scanDate.getDate())} ${pad(scanDate.getHours())}:${pad(scanDate.getMinutes())}:${pad(scanDate.getSeconds())}`;
+
     const newItem = {
       id: Date.now().toString(),
       code: data,
       name: displayName,
-      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      time: scanDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      scanned_at: scannedAt,
     };
 
     setScannedList((prev) => [newItem, ...prev]);
@@ -117,7 +122,10 @@ const StudentScanScreen = ({ onBack }) => {
 
     setSubmitting(true);
     try {
-      const qrCodes = scannedList.map((item) => item.code);
+      const qrCodes = scannedList.map((item) => ({
+        code: item.code,
+        scanned_at: item.scanned_at || null,
+      }));
       const res = await client.post('/attendance/scan-student', { qr_codes: qrCodes });
 
       if (res.data?.success) {

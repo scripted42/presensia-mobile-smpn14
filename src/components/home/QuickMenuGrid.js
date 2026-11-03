@@ -9,6 +9,7 @@ import {
   Calendar,
   User,
   ShieldCheck,
+  Trophy,
 } from 'lucide-react-native';
 
 const QuickMenuGrid = ({ isStudent, onNavigate }) => {
@@ -51,6 +52,15 @@ const QuickMenuGrid = ({ isStudent, onNavigate }) => {
       action: () => onNavigate('student-history'),
     },
     {
+      id: 'leaderboard',
+      title: 'Peringkat Disiplin',
+      sub: 'Klasemen Siswa',
+      icon: Trophy,
+      color: '#B45309',
+      bg: '#FEF3C7',
+      action: () => onNavigate('leaderboard-tab'),
+    },
+    {
       id: 'leave',
       title: 'Izin & Cuti',
       sub: 'Pengajuan & Verif',
@@ -72,6 +82,15 @@ const QuickMenuGrid = ({ isStudent, onNavigate }) => {
 
   // Menu items for Siswa
   const studentMenus = [
+    {
+      id: 'leaderboard',
+      title: 'Peringkat Disiplin',
+      sub: 'Klasemen Kelas',
+      icon: Trophy,
+      color: '#B45309',
+      bg: '#FEF3C7',
+      action: () => onNavigate('leaderboard-tab'),
+    },
     {
       id: 'student-qr',
       title: 'QR Code Saya',
